@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  pgdb:
+    container_name: shoes_store
+    image: postgres
+    restart: always
+    ports: 
+      - 5432:5432
+    environment:
+      - POSTGRES_DB=shoes_store
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
