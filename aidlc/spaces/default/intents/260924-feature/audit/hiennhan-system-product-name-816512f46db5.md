@@ -1836,3 +1836,165 @@
 **Session**: ses_f1cab9ceeffe506RLznXgNHH42
 
 ---
+
+## Human Turn
+**Timestamp**: 2026-09-28T16:10:11Z
+**Event**: HUMAN_TURN
+**Session**: ses_f1cab9ceeffe506RLznXgNHH42
+
+---
+
+## Human Turn
+**Timestamp**: 2026-09-28T16:10:35Z
+**Event**: HUMAN_TURN
+**Session**: ses_f1cab9ceeffe506RLznXgNHH42
+
+---
+
+## Human Turn
+**Timestamp**: 2026-09-28T16:11:40Z
+**Event**: HUMAN_TURN
+**Session**: ses_f1cab9ceeffe506RLznXgNHH42
+
+---
+
+## Human Turn
+**Timestamp**: 2026-09-28T16:13:20Z
+**Event**: HUMAN_TURN
+**Session**: ses_f1cab9ceeffe506RLznXgNHH42
+
+---
+
+## Session Start
+**Timestamp**: 2026-09-28T16:14:52Z
+**Event**: SESSION_STARTED
+**Source**: startup
+**Session**: ses_f1733c850ffe1XomNQ7n0n5xbN
+
+---
+
+## Human Turn
+**Timestamp**: 2026-09-28T16:14:53Z
+**Event**: HUMAN_TURN
+**Session**: ses_f1733c850ffe1XomNQ7n0n5xbN
+
+---
+
+## Human Turn
+**Timestamp**: 2026-09-28T16:36:22Z
+**Event**: HUMAN_TURN
+**Session**: ses_f1733c850ffe1XomNQ7n0n5xbN
+
+---
+
+## Gate Approved
+**Timestamp**: 2026-09-28T16:36:33Z
+**Event**: GATE_APPROVED
+**Stage**: user-stories
+**User Input**: Approve
+
+---
+
+## Stage Completion
+**Timestamp**: 2026-09-28T16:36:33Z
+**Event**: STAGE_COMPLETED
+**Stage**: user-stories
+**Validation Basis**: {"graphContract":"sha256:c75f05406db1b9ac835b39d17823589395911112ecd624d831c9997726414fca","inputs":[{"artifact":"business-overview","contentHash":"sha256:aa5ff23067d4c657402b31e315c4017f999c9f5b6f97004a2eb5a2d2463f7feb","instanceCount":1,"presentCount":1,"producer":"reverse-engineering","required":false,"structureHash":"sha256:c78746c4643cb2bd01ac6b4756c6825bba51befe7988cc314402f50020bba306"},{"artifact":"component-inventory","contentHash":"sha256:00c0b79c17de8b7993a92e98192932bf2874098e57805e45278649173f1a6fc6","instanceCount":1,"presentCount":1,"producer":"reverse-engineering","required":false,"structureHash":"sha256:ff865abf4b6015dbe24c293bfe1bb6361f306b1692f3aede19bb5e88d4b73872"},{"artifact":"requirements","contentHash":"sha256:1ed4ec98a3b5c8fd23f240d1dfdead749613865040bb7ef589f1a97ae5b868bd","instanceCount":1,"presentCount":1,"producer":"requirements-analysis","required":true,"structureHash":"sha256:3153c226ced08d9dca457677e03bc454895af1276785eacda239dc162c62b472"},{"artifact":"team-practices","contentHash":"sha256:2c75416629c3a5bb747cc6364fdf8a863002345e7ae025e5f5384702526941a9","instanceCount":1,"presentCount":1,"producer":"practices-discovery","required":false,"structureHash":"sha256:f813528d316486d2f80c9df70a8283d5666454c98c8ce8fa27ffcba9f06f8744"}],"outputs":[{"artifact":"personas","contentHash":"sha256:3de3ac45216c3b0f7db4e000c9f46654516f6db1c9ca0d2f46e6d6cf74fa26e4","instanceCount":1,"presentCount":1,"producer":"user-stories","required":true,"structureHash":"sha256:1d1a1cd4a263929df496a33e7b68a451be7d9981ac69270924f2f1530952a163"},{"artifact":"stories","contentHash":"sha256:b6713d81e65626b9f6a42bfded6a6003f847fb26ad9c23a841800e9e798fbea8","instanceCount":1,"presentCount":1,"producer":"user-stories","required":true,"structureHash":"sha256:0d3fac70e5ee933dadcb69db8cd63e9284b15136ef080109df07551c5f2ddaea"},{"artifact":"traceability","contentHash":"sha256:595d8fc48c750019732ec8e497e7a36449c91b096b0457da4d4b072a6100fff4","instanceCount":1,"presentCount":1,"producer":"user-stories","required":true,"structureHash":"sha256:a5a3c6973239cf27de4ebe633f03eddc355fc6953e1497d0453ce2dc4f15252a"},{"artifact":"user-stories-assessment","contentHash":"sha256:cab25fbad9fa0ff4ed205c95224eaa2a7ef4bc30092e00117d94fb73778c0156","instanceCount":1,"presentCount":1,"producer":"user-stories","required":true,"structureHash":"sha256:20c29dc0301ebde111e9919b70b148ba987a20feec93537da8975dbb5827fa4e"}],"projectType":"brownfield","schema":3}
+**Details**: Stage User Stories approved by gate
+
+---
+
+## Stage Start
+**Timestamp**: 2026-09-28T16:36:33Z
+**Event**: STAGE_STARTED
+**Stage**: refined-mockups
+**Agent**: aidlc-design-agent
+
+---
+
+## Stage Awaiting Approval
+**Timestamp**: 2026-09-28T16:40:20Z
+**Event**: STAGE_AWAITING_APPROVAL
+**Stage**: refined-mockups
+
+---
+
+## Human Turn
+**Timestamp**: 2026-09-28T16:40:42Z
+**Event**: HUMAN_TURN
+**Session**: ses_f1733c850ffe1XomNQ7n0n5xbN
+
+---
+
+## Gate Approved
+**Timestamp**: 2026-09-28T16:40:51Z
+**Event**: GATE_APPROVED
+**Stage**: refined-mockups
+**User Input**: Approve
+
+---
+
+## Stage Completion
+**Timestamp**: 2026-09-28T16:40:51Z
+**Event**: STAGE_COMPLETED
+**Stage**: refined-mockups
+**Validation Basis**: {"graphContract":"sha256:a24fe5e76e30a54250dff6f40ed7dd073597cbf8edbc2b452e33e3c0f0dcfd03","inputs":[{"artifact":"requirements","contentHash":"sha256:1ed4ec98a3b5c8fd23f240d1dfdead749613865040bb7ef589f1a97ae5b868bd","instanceCount":1,"presentCount":1,"producer":"requirements-analysis","required":true,"structureHash":"sha256:3153c226ced08d9dca457677e03bc454895af1276785eacda239dc162c62b472"},{"artifact":"stories","contentHash":"sha256:b6713d81e65626b9f6a42bfded6a6003f847fb26ad9c23a841800e9e798fbea8","instanceCount":1,"presentCount":1,"producer":"user-stories","required":false,"structureHash":"sha256:0d3fac70e5ee933dadcb69db8cd63e9284b15136ef080109df07551c5f2ddaea"},{"artifact":"team-practices","contentHash":"sha256:2c75416629c3a5bb747cc6364fdf8a863002345e7ae025e5f5384702526941a9","instanceCount":1,"presentCount":1,"producer":"practices-discovery","required":false,"structureHash":"sha256:f813528d316486d2f80c9df70a8283d5666454c98c8ce8fa27ffcba9f06f8744"},{"artifact":"user-flow","contentHash":"sha256:fdf582682c887ef9299596b6132d9324d7589608bdc718637ed8378580b50f6c","instanceCount":1,"presentCount":0,"producer":"rough-mockups","required":true,"structureHash":"sha256:1bee0fb6d1cb1320380720b06f84cdd9bbcde69358690e8237ab546af91c263f"},{"artifact":"wireframes","contentHash":"sha256:9d0b7a12612d0f28cd097f7d0c23ac4e7385085ecaa8f492b7e2bd7088345398","instanceCount":1,"presentCount":0,"producer":"rough-mockups","required":true,"structureHash":"sha256:921287443e76858f526a90e22bf66e0936c5b98baedf0ad2921f3c54d03df895"}],"outputs":[{"artifact":"accessibility-checklist","contentHash":"sha256:a95a315807d1c646cfc41346df449a30e38bcdb31e3015eb9fa6000dcef319f1","instanceCount":1,"presentCount":1,"producer":"refined-mockups","required":true,"structureHash":"sha256:168d1241db88d84fb97f924442075f1fb8e1c6fd648c7202ea1eeaaed2efb8c1"},{"artifact":"design-system-mapping","contentHash":"sha256:197ae7f3dabac9e6b8439fc4d0939c0bfd86d9bff0335ca26856e46911b83270","instanceCount":1,"presentCount":1,"producer":"refined-mockups","required":true,"structureHash":"sha256:df2b152af0f91c8793994564e22be6ab3d4d02fc3339a1a266ba0428d132085e"},{"artifact":"interaction-spec","contentHash":"sha256:023811df0b7b432b2edd4c3e837cbc28698ca519112b27fc50ddf038ec4f5510","instanceCount":1,"presentCount":1,"producer":"refined-mockups","required":true,"structureHash":"sha256:3620051274d04a14ed3005d0ce91bd6389ba97b7ec2a64523d27c0e12958cb71"},{"artifact":"mockups","contentHash":"sha256:598b252fcf2785928c0a80f8de706151c440e3fb07f465077bdd974deb549e8e","instanceCount":1,"presentCount":1,"producer":"refined-mockups","required":true,"structureHash":"sha256:5ac45d13da5a42587f935164a2ed62a11a5506908f0f71f442e1a908e94e34f3"},{"artifact":"refined-mockups-questions","contentHash":"sha256:13c39a4b16c9a5dd9b95a3c62a00bec130a7c901d610d5937604bbd2cca79345","instanceCount":1,"presentCount":1,"producer":"refined-mockups","required":true,"structureHash":"sha256:e2faa381addae53f4ab6c758241128d4efff5f0e607cc33b28037deac62b754f"}],"projectType":"brownfield","schema":3}
+**Details**: Stage Refined Mockups approved by gate
+
+---
+
+## Stage Start
+**Timestamp**: 2026-09-28T16:40:51Z
+**Event**: STAGE_STARTED
+**Stage**: domain-design
+**Agent**: aidlc-architect-agent
+
+---
+
+## Human Turn
+**Timestamp**: 2026-09-28T16:44:44Z
+**Event**: HUMAN_TURN
+**Session**: ses_f1733c850ffe1XomNQ7n0n5xbN
+
+---
+
+## Human Turn
+**Timestamp**: 2026-09-28T16:46:01Z
+**Event**: HUMAN_TURN
+**Session**: ses_f1733c850ffe1XomNQ7n0n5xbN
+
+---
+
+## Human Turn
+**Timestamp**: 2026-09-28T16:46:50Z
+**Event**: HUMAN_TURN
+**Session**: ses_f1733c850ffe1XomNQ7n0n5xbN
+
+---
+
+## Human Turn
+**Timestamp**: 2026-09-28T16:47:49Z
+**Event**: HUMAN_TURN
+**Session**: ses_f1733c850ffe1XomNQ7n0n5xbN
+
+---
+
+## Human Turn
+**Timestamp**: 2026-09-28T16:59:48Z
+**Event**: HUMAN_TURN
+**Session**: ses_f1733c850ffe1XomNQ7n0n5xbN
+
+---
+
+## Workflow Parked
+**Timestamp**: 2026-09-28T17:05:38Z
+**Event**: WORKFLOW_PARKED
+**Stage**: domain-design
+
+---
+
+## Workflow Unparked
+**Timestamp**: 2026-09-28T17:05:56Z
+**Event**: WORKFLOW_UNPARKED
+
+---

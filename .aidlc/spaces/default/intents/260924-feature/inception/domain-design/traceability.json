@@ -1,0 +1,28 @@
+{
+  "stage": "domain-design",
+  "upstream_ids": ["US1.1", "US1.2", "US1.3", "US1.4", "US1.5", "US1.6", "US1.7", "US1.8", "US1.9", "US1.10", "FR1", "FR2", "FR3", "FR4", "FR5", "FR6", "FR7", "NFR1", "NFR2", "NFR3", "NFR4", "NFR5"],
+  "coverage": [
+    { "id": "US1.1", "status": "OK", "target": "CatalogComponent" },
+    { "id": "US1.2", "status": "OK", "target": "CatalogComponent" },
+    { "id": "US1.3", "status": "OK", "target": "CartComponent" },
+    { "id": "US1.4", "status": "OK", "target": "CheckoutComponent" },
+    { "id": "US1.5", "status": "OK", "target": "AuthComponent" },
+    { "id": "US1.6", "status": "GAP", "target": "—" },
+    { "id": "US1.7", "status": "GAP", "target": "—" },
+    { "id": "US1.8", "status": "GAP", "target": "—" },
+    { "id": "US1.9", "status": "OK", "target": "UserComponent" },
+    { "id": "US1.10", "status": "OK", "target": "CatalogComponent" },
+    { "id": "FR1", "status": "OK", "target": "CatalogComponent" },
+    { "id": "FR2", "status": "OK", "target": "CatalogComponent" },
+    { "id": "FR3", "status": "OK", "target": "CartComponent" },
+    { "id": "FR4", "status": "OK", "target": "CheckoutComponent" },
+    { "id": "FR5", "status": "OK", "target": "AuthComponent" },
+    { "id": "FR6", "status": "OK", "target": "—" },
+    { "id": "FR7", "status": "OK", "target": "UserComponent" },
+    { "id": "NFR1", "status": "OK", "target": "All components (responsive design)" },
+    { "id": "NFR2", "status": "OK", "target": "All components (performance targets)" },
+    { "id": "NFR3", "status": "Deferred", "target": "infra-requirements" },
+    { "id": "NFR4", "status": "OK", "target": "All user-facing components" },
+    { "id": "NFR5", "status": "OK", "target": "All components (Prisma type safety)" }
+  ]
+}
