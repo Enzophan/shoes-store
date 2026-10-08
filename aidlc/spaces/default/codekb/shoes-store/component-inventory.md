@@ -1,73 +1,63 @@
-# Component Inventory — shoes-store
+# Component Inventory — Sole & Strand
 
-## Reusable Components
+## React Components
 
-### ProductCard (`app/components/ProductCard.tsx`)
-- **Props**: `{ product: Product }`
-- **Features**: Image, drop tag (BEST/NEW/DEAL/RESTOCK), category, name, price
-- **Variants**: None (single component)
-- **Used in**: Homepage featured, category strips, product listing
-- **Styling**: Tailwind, aspect-square, hover scale animation
-- **Accessibility**: aria-label with name and price
+### `src/app/components/ProductCard.tsx`
+- **Props**: `product: Product` — Product interface with id, name, slug, category, image?, variants, isBestseller?, isNewArrival?, isDeal?, isRestock?
+- **Exports**: Default `ProductCard` component
+- **Dependencies**: React, `next/link`
+- **Displays**: Product image, drop tag (BEST/FW25 ↓/DEAL/RESTOCK/ARCHIVE), category, name (linked), price
+- **State**: None (presentational component)
+- **Side Effects**: None
 
-### DropTag (inline in ProductCard & page.tsx)
-- **Variants**: rose, ink, stone, pearl
-- **Labels**: BEST, FW25 ↓, DEAL, RESTOCK, ARCHIVE
-- **Styling**: font-mono, rounded badge
+### `src/app/layout.tsx` (Root Layout)
+- **Exports**: Default `RootLayout` component
+- **Dependencies**: `./styles/globals.css`, `next`, `next/link`, `type { Metadata } from 'next'`
+- **Displays**: Header with brand/navigation, main content area, footer with links and social icons
+- **State**: None (root layout)
+- **Side Effects**: Sets document structure, sticky header, responsive grid
 
-### Link Wrappers (Next.js Link)
-- Used throughout for navigation
-- No custom Link component
+## API Route Handlers
 
-## Page-Level Components (Inline)
+### `src/app/api/products/route.ts`
+- **Exports**: `GET`, `POST` async functions
+- **Dependencies**: `next/server`, `@prisma/client`
+- **Prisma Client**: `new PrismaClient()` (singleton instance)
+- **GET**: `prisma.product.findMany({ include: { variants: true } })`
+- **POST**: `prisma.product.create()` with data from request body
 
-### Homepage (`app/page.tsx`)
-| Section | Component | Lines |
-|---------|-----------|-------|
-| Hero Banner | Inline static section | 68-96 |
-| Highlights Bar | Inline nav with Links | 99-119 |
-| Featured Edit | Inline grid with hero + cards | 121-197 |
-| Category Strips | Inline horizontal scroll sections | 199-252 |
-| DropTag | Inline function component | 42-54 |
-| getDropTag | Helper function | 34-40 |
-| clampText4xl5xl | Fluid typography helper | 266-275 |
+### `src/app/api/orders/route.ts`
+- **Exports**: `GET`, `POST` async functions
+- **Dependencies**: `next/server`, `@prisma/client`, `../../../lib/orderService`
+- **POST**: Calls `createOrder(prisma, body)` — wraps in try/catch, returns 400 on error
+- **GET**: Returns `{ info: 'POST to create order (COD supported)' }`
 
-### Admin Products
-| File | Components |
-|------|------------|
-| `page.tsx` | Product list table (inline) |
-| `new/page.tsx` | Create form (inline) |
-| `[id]/page.tsx` | Product detail view |
-| `[id]/EditProduct.tsx` | Edit form (inline) |
+### `src/app/api/cart/route.ts`
+- **Exports**: `GET`, `POST` async functions
+- **Dependencies**: `next/server`, `@prisma/client`
+- **POST**: Validates items, checks variant availability, returns detailed cart summary with total
+- **GET**: Returns `{ info: 'POST to validate cart items' }`
 
-## Missing/Needed for Banner Feature
+### `src/app/api/orders/[id]/route.ts`
+- **Exports**: `GET` async function
+- **Dependencies**: `next/server`, `@prisma/client`
+- **GET**: Looks up order by numeric ID OR orderNumber string, includes items with variants and shipping address
 
-### New Components Needed
-1. **BannerCarousel** — Auto-rotating carousel (3-10 slides, 10s interval)
-   - Pause on hover/focus
-   - Keyboard navigation
-   - Touch/swipe support
-   - Reduced motion preference
-   - ARIA live region for slide announcements
+## Utilities
 
-2. **BannerSlide** — Individual slide component
-   - Image (Next.js Image optimized)
-   - Headline, subtext, CTA button
-   - Link handling
+### `src/lib/validation.ts`
+- **Exports**: `validateCartItems`, `validateEmail`, `validateShippingAddress`
+- **Type**: `CartItem = { variantId: number; quantity: number }`
+- **validateCartItems(items: any)**: Returns `{ valid: boolean; errors: string[] }`
+  - Checks items is an array
+  - Validates each item: variantId must be positive integer, quantity must be positive integer
+- **validateEmail(email?: string)**: Returns `boolean` — regex test `/^[^\s@]+@[^\s@]+\.[^\s@]+$/`
+- **validateShippingAddress(addr: any)**: Returns `{ valid: boolean; errors: string[] }`
+  - Checks address is provided
+  - Validates: fullName, line1, city, postalCode, country are present
 
-3. **Admin Banner Management**
-   - BannerList (table/grid)
-   - BannerForm (create/edit)
-   - Drag-drop reordering (nice-to-have)
-
-### Integration Points
-- **Homepage**: Replace static hero (lines 68-96) with `<BannerCarousel />`
-- **Admin Dashboard**: Add "Manage Banners" card linking to `/admin/banners`
-- **Admin Routes**: New `/admin/banners` page + API routes
-
-## Styling System
-- **Tailwind CSS** with custom theme colors:
-  - `--ink` (near-black), `--chalk` (off-white), `--rose` (brand pink)
-  - `--rose-soft`, `--stone`, `--pearl` (semantic colors)
-- **Typography**: `font-display` (headings), `font-mono` (labels/prices)
-- **Animations**: `transition-transform`, `transition-colors`, `duration-500`
+## Configuration Files
+- `next.config.js` — Next.js configuration
+- `tailwind.config.js` — Tailwind CSS color palette (chalk, ink, rose, stone, pearl)
+- `tsconfig.json` — TypeScript paths and compiler options
+- `package.json` — Dependencies: next, react, prisma, @prisma/client, tailwindcss

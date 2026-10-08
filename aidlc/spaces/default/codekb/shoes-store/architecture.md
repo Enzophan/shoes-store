@@ -1,54 +1,39 @@
-# Architecture — shoes-store
+# Architecture Overview — Sole & Strand
 
-## System Overview
-Next.js 14+ App Router (React 18, TypeScript) with PostgreSQL/Prisma backend. Deployed on Vercel with edge functions.
+## High-Level Architecture
+**Full-Stack TypeScript/Next.js application** with a **Prisma ORM** layer connecting to a **PostgreSQL** database.
 
-## Layer Diagram
-```
-┌─────────────────────────────────────────────┐
-│           Presentation (Next.js)            │
-│  app/ (pages, layouts, components)          │
-│  lib/ (validation, services)                │
-└─────────────────────┬───────────────────────┘
-                      │ Server Components / API Routes
-┌─────────────────────▼───────────────────────┐
-│              Data Layer (Prisma)            │
-│  Product, Variant, Order, User, Address     │
-└─────────────────────┬───────────────────────┘
-                      │ PostgreSQL
-┌─────────────────────▼───────────────────────┐
-│           Infrastructure (Vercel)           │
-│  Edge Network, Image Optimization,          │
-│  Serverless Functions, PostgreSQL (Neon)    │
-└─────────────────────────────────────────────┘
-```
+## Technology Stack
+- **Frontend**: Next.js 13+ (App Router), React, TypeScript
+- **Backend**: Next.js API Routes (serverless functions), Prisma Client
+- **Database**: PostgreSQL (managed via Supabase or self-hosted)
+- **Styling**: Tailwind CSS with custom color palette (chalk, ink, rose, stone, pearl)
+- **Deployment**: Vercel (recommended) or Node.js hosting
 
-## Key Architectural Patterns
-- **Server Components First**: `page.tsx` uses async/await for data fetching
-- **Route Handlers**: `/api/*` for mutations (cart, orders, admin)
-- **Colocated Components**: UI components in `app/components/`
-- **Type-Safe Database**: Prisma schema → TypeScript types
-- **Optimistic UI**: Client-side cart with server sync
+## Component Decomposition
 
-## Data Flow (Homepage)
-1. `page.tsx` calls `getProducts()` → `fetch('/api/products')`
-2. `/api/products/route.ts` → Prisma `findMany()` → JSON response
-3. Products filtered client-side for featured/categories
-4. Rendered via `ProductCard` and inline components
+### Presentation Layer (App Router)
+- `app/layout.tsx` — Root layout with header, navigation, footer
+- `app/products/page.tsx` — Product listing page with filtering and sorting
+- `app/products/[slug]/page.tsx` — Product detail page
+- `app/cart/[id]/page.tsx` — Cart management
+- `app/api/...` — API routes for products, orders, cart
 
-## Integration Points for Banner Feature
-| Integration Point | Current State | Banner Feature Need |
-|-------------------|---------------|---------------------|
-| Homepage (`page.tsx`) | Static hero section (lines 68-96) | Replace with carousel component |
-| Admin Dashboard | Products, Orders only | Add "Manage Banners" section |
-| Database (Prisma) | Product, Variant, Order, User | Add `Banner` model |
-| API Routes | `/api/products`, `/api/cart`, `/api/orders` | Add `/api/admin/banners` |
-| Image Handling | Next.js Image (Vercel) | Same for banner images |
-| Styling | Tailwind CSS, CSS variables | Carousel animations |
+### Business Logic Layer
+- `src/lib/orderService.ts` — Order creation with inventory validation, user management, shipping address, and Prisma transaction
+- `src/lib/validation.ts` — Input validation for cart items, email addresses, and shipping addresses
 
-## Existing Patterns to Follow
-- Admin routes: `/admin/*` with page.tsx + API routes
-- Data fetching: Server components with `fetch()` to own API
-- Components: Colocated in `app/components/`
-- Styling: Tailwind with CSS custom properties (--rose-soft, --ink, --chalk)
-- TypeScript: Strict mode, interfaces in component files
+### Data Access Layer
+- **Prisma Schema** (`prisma/schema.prisma`) — 7 models: Product, Variant, Order, OrderItem, User, Address, Enum types (OrderStatus, PaymentMethod)
+- **Prisma Client** — Auto-generated TypeScript client for database operations
+
+## Data Flow
+1. **Product Listing**: Client fetches `/api/products` → Prisma `product.findMany` with variants → JSON response
+2. **Order Creation**: Client posts to `/api/orders` → `createOrder()` service → validates items, finds/creates user, creates shipping address, Prisma transaction: create order + decrement inventory
+3. **Cart Validation**: Client posts to `/api/cart` → validates variant existence and inventory, returns detailed availability
+
+## Key Integration Points
+- **Prisma Migrations** — Versioned database schema changes
+- **Next.js Server Components** — Data fetching in `app/products/page.tsx` via `fetch('/api/products')`
+- **API Route Handlers** — All routes in `src/app/api/` are server-side by default
+- **Tailwind CSS** — Utility-first styling configured in `tailwind.config.js`

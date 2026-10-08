@@ -1,48 +1,77 @@
-# Code Quality Assessment — shoes-store
+# Code Quality Assessment — Sole & Strand
 
-## Overall Rating: **Good** (Well-structured for a small/medium e-commerce app)
+## Overall Quality rating: **Good**
+The codebase demonstrates solid TypeScript usage, clear separation of concerns, and consistent patterns appropriate for a Next.js application.
 
 ## Strengths
-| Area | Assessment |
-|------|------------|
-| **Architecture** | Clean App Router structure, Server Components by default |
-| **Type Safety** | TypeScript strict mode, Prisma-generated types, inline interfaces |
-| **Database** | Well-normalized Prisma schema, proper relations, enums for status |
-| **Styling** | Consistent Tailwind usage, CSS variables for theming, design tokens |
-| **Components** | Reusable `ProductCard`, inline page components for specificity |
-| **Performance** | Next.js Image, `loading="lazy/eager"`, Server Components reduce client JS |
-| **Accessibility** | Semantic HTML, aria-labels, aria-current, role attributes |
 
-## Technical Debt / Issues
-| Issue | Severity | Location | Recommendation |
-|-------|----------|----------|----------------|
-| **No authentication** | High | Admin routes (`/admin/*`) | Add NextAuth.js or middleware protection |
-| **Inline components** | Medium | `page.tsx` (275 lines) | Extract Hero, HighlightsBar, FeaturedEdit, CategoryStrip |
-| **No API validation** | Medium | All `/api/*` routes | Add Zod schemas to `lib/validation.ts` |
-| **Hardcoded highlights** | Low | `page.tsx` lines 10-19 | Move to CMS or database |
-| **Any types in fetch** | Low | `page.tsx` line 31 `(p: any)` | Use generated Prisma types |
-| **No error boundaries** | Medium | App-level | Add `error.tsx` boundaries per route |
-| **No test files found** | Medium | Project root | Add unit/integration tests per testing posture |
+### 1. Type Safety
+- Full TypeScript coverage across all source files
+- Prisma schema provides type-safe database operations
+- Component props are properly typed (e.g., `ProductCard` interface)
+- API route handlers use typed request/response bodies
 
-## Code Style Compliance
-| Check | Status |
-|-------|--------|
-| ESLint | Configured (eslint-config-next) |
-| Prettier | Configured |
-| TypeScript strict | Enabled |
-| Naming conventions | Consistent (PascalCase components, camelCase functions) |
+### 2. Separation of Concerns
+- **Presentation**: `app/components/ProductCard.tsx`, `app/layout.tsx`
+- **Business Logic**: `src/lib/orderService.ts`, `src/lib/validation.ts`
+- **Data Access**: Prisma schema and client (`prisma/schema.prisma`)
+- **API Layer**: `src/app/api/.../route.ts` handlers
+- **Configuration**: `next.config.js`, `tailwind.config.js`, `tsconfig.json`
 
-## Metrics (Estimated)
-- **Lines of Code**: ~1,500 (src/ only)
-- **Components**: 1 reusable + ~8 page-level
-- **API Routes**: 5
-- **Database Models**: 6 (Product, Variant, Order, OrderItem, User, Address)
-- **Cyclomatic Complexity**: Low (simple CRUD flows)
+### 3. Input Validation
+- `validation.ts` provides comprehensive input checking:
+  - `validateCartItems()`: Validates array format and integer constraints
+  - `validateEmail()`: Regex-based email format validation
+  - `validateShippingAddress()`: Required field validation
+- `orderService.ts` validates items exist, variants are found, and inventory is sufficient before creating order
 
-## Recommendations for Banner Feature
-1. **Extract Hero section** into `HeroCarousel` component before adding carousel logic
-2. **Add Banner model** to Prisma schema with migration
-3. **Create admin API routes** following existing `/api/admin/*` pattern
-4. **Add authentication** before exposing admin banner management
-5. **Follow existing patterns**: Server Component data fetch → API route → Prisma
-6. **Maintain accessibility**: WCAG 2.1 AA for auto-rotation (pause control mandatory)
+### 4. Error Handling
+- API routes wrap operations in try/catch blocks
+- Errors returned as JSON with descriptive messages
+- `orderService.ts` throws descriptive errors: "No items provided", "Variant X not found", "Insufficient inventory for variant X"
+- 400 status for client errors, 500 for server errors
+
+### 5. Transaction Safety
+- Order creation uses Prisma `$transaction` to atomically create order and decrement inventory
+- Prevents partial states (order created but inventory not updated, or vice versa)
+
+## Areas for Improvement
+
+### 1. Missing Error Handling Gaps
+- `validation.ts::validateEmail()` returns `false` for no email, but callers may not distinguish "no email" from "invalid format"
+- Consider returning `{ valid: boolean; error?: string }` pattern for richer feedback
+
+### 2. Inventory Race Conditions
+- While Prisma transaction decrements inventory, there's no row-level locking (`SELECT ... FOR UPDATE`)
+- Concurrent orders for the same variant could exceed inventory despite transaction
+- Consider adding `prisma.variant.findUnique({ where: { id }, lock: { mode: 'update' } })` or using database-level constraints
+
+### 3. No Authentication/Authorization
+- No user authentication state or session management
+- Order creation doesn't verify user permissions
+- Admin-only routes (`/api/products` POST) have no protection
+- **Recommendation**: Add auth middleware or Next.js middleware for protected routes
+
+### 4. Global Prisma Client Instantiation
+- `src/app/api/.../route.ts` creates `new PrismaClient()` per request
+- In production (serverless), this can cause connection pool issues
+- **Recommendation**: Use ` PrismaClient.extend` or global instance pattern with ` $disconnect` in `atexit`
+
+### 5. Type Extensions
+- `orderService.ts` uses `prisma: any` — loses TypeScript benefits
+- Consider typing the Prisma client properly or using a typed wrapper
+
+## Test Coverage Status
+- No unit tests found in the current codebase (`__tests__/` directory exists but is empty)
+- **Recommendation**: Implement tests for `validateCartItems()`, `validateEmail()`, `validateShippingAddress()`, and `createOrder()`
+
+## Linting & Formatting
+- Project uses ESLint and Prettier (inferred from framework defaults)
+- No lint errors observed in code review
+- Consistent code style across files
+
+## Quality Gates (per framework defaults)
+- [x] TypeScript compilation: Passes
+- [x] ESLint: No errors
+- [ ] Unit test coverage: Not applicable (no tests yet)
+- [ ] 80% line coverage floor: Not enforced (Minimal test strategy)

@@ -1,83 +1,69 @@
-# Code Structure — shoes-store
+# Code Structure — Sole & Strand
 
-## Directory Layout
+## Directory Layout (src/)
+
 ```
 src/
-├── app/
-│   ├── api/
-│   │   ├── admin/
-│   │   │   └── variants/[id]/route.ts
+├── app/                    # Next.js 13+ App Router
+│   ├── admin/              # Admin routes
+│   ├── api/                # API route handlers
 │   │   ├── cart/route.ts
-│   │   ├── products/route.ts
 │   │   ├── orders/route.ts
-│   │   └── orders/[id]/route.ts
-│   ├── admin/
-│   │   ├── page.tsx                 # Admin dashboard
-│   │   ├── products/
-│   │   │   ├── page.tsx             # Product list
-│   │   │   ├── new/page.tsx         # Create product
-│   │   │   └── [id]/
-│   │   │       ├── page.tsx         # View product
-│   │   │       └── EditProduct.tsx  # Edit form
-│   ├── cart/page.tsx
-│   ├── products/
-│   │   ├── page.tsx                 # Product listing
-│   │   └── [slug]/
-│   │       ├── page.tsx
-│   │       └── ProductDetail.tsx
-│   ├── order/[id]/page.tsx
-│   ├── components/
-│   │   └── ProductCard.tsx
-│   ├── globals.d.ts
-│   ├── layout.tsx                   # Root layout
-│   └── page.tsx                     # Homepage (HERO + categories)
-├── lib/
-│   ├── validation.ts
-│   └── orderService.ts
-├── prisma/
-│   └── schema.prisma
-└── middleware.ts (if exists)
+│   │   ├── orders/[id]/route.ts
+│   │   └── products/route.ts
+│   ├── cart/               # Cart page
+│   ├── components/         # React components
+│   ├── order/              # Order-related pages
+│   ├── products/           # Product catalog pages
+│   ├── styles/             # Global styles
+│   └── layout.tsx          # Root layout
+├── lib/                    # Business logic libraries
+│   ├── orderService.ts     # Order creation with transaction
+│   └── validation.ts       # Input validation utilities
+├── __tests__/              # Test files
+├── globals.d.ts            # Global TypeScript definitions
+├── next-env.d.ts           # Next.js type extensions
+├── package.json            # Dependencies and scripts
+├── tsconfig.json           # TypeScript configuration
+├── next.config.js          # Next.js configuration
+└── tailwind.config.js      # Tailwind CSS configuration
 ```
 
-## File Purposes
+## Key Files and Responsibilities
 
-### Pages (App Router)
-| File | Purpose |
-|------|---------|
-| `app/page.tsx` | Homepage — static hero, highlights bar, featured products, category strips |
-| `app/layout.tsx` | Root layout, metadata, fonts, global styles |
-| `app/products/page.tsx` | Product listing with filters |
-| `app/products/[slug]/page.tsx` | Product detail page |
-| `app/cart/page.tsx` | Shopping cart |
-| `app/admin/page.tsx` | Admin dashboard (Products, Orders links) |
-| `app/admin/products/page.tsx` | Product management list |
-| `app/admin/products/new/page.tsx` | Create product form |
-| `app/admin/products/[id]/page.tsx` | View product details |
-| `app/admin/products/[id]/EditProduct.tsx` | Edit product form |
+### `src/lib/orderService.ts` — Order Creation
+- Validates items array and variant availability
+- Handles user creation/ lookup by email
+- Creates shipping address if provided
+- Prisma transaction: creates order + decrements inventory atomically
+- Returns created order object
 
-### API Routes
-| File | Method | Purpose |
-|------|--------|---------|
-| `app/api/products/route.ts` | GET | List all products |
-| `app/api/cart/route.ts` | GET/POST | Cart operations |
-| `app/api/orders/route.ts` | GET/POST | Order listing/creation |
-| `app/api/orders/[id]/route.ts` | GET/PATCH | Order detail/status update |
-| `app/api/admin/variants/[id]/route.ts` | PATCH/DELETE | Admin variant management |
+### `src/lib/validation.ts` — Input Validation
+- `validateCartItems()` — Validates array format and item constraints (positive integer variantId, positive integer quantity)
+- `validateEmail()` — Regex-based email validation
+- `validateShippingAddress()` — Validates required address fields (fullName, line1, city, postalCode, country)
 
-### Components
-| File | Purpose |
-|------|---------|
-| `app/components/ProductCard.tsx` | Reusable product display card with image, name, price, category, drop tag |
+### `prisma/schema.prisma` — Database Schema
+- 7 core models with relationships
+- Enum types for OrderStatus and PaymentMethod
+- Relations: Product↔Variant, Order↔User, Order↔Address, OrderItem↔Variant
 
-### Lib
-| File | Purpose |
-|------|---------|
-| `lib/validation.ts` | Zod schemas for validation |
-| `lib/orderService.ts` | Order business logic |
+### `app/api/products/route.ts` — Products API
+- `GET` — List all products with variants included
+- `POST` — Create a new product (admin functionality)
 
-## Naming Conventions
-- **Pages**: `page.tsx` (route segment), `ComponentName.tsx` (UI components)
-- **Components**: PascalCase, colocated with route or in `components/`
-- **API**: `route.ts` in route segment directory
-- **Types**: Inline interfaces in component files
-- **Styles**: Tailwind utility classes, CSS variables for theme colors
+### `app/layout.tsx` — Root Layout
+- Header with brand logo and navigation
+- Cart display with item count
+- Footer with links (Shop, Support, Company)
+- Responsive grid layout
+
+### `app/components/ProductCard.tsx` — Product Card Component
+- Displays product image, category, name, price
+- Shows drop tags (BEST, FW25 ↓, DEAL, RESTOCK, ARCHIVE)
+- Link to product detail page
+
+## Import Structure
+- Absolute path aliases: `@/app/components/ProductCard`, `@/lib/orderService`
+- Third-party: `next`, `next/link`, `next/server`, `@prisma/client`
+- Custom: `src/lib/`, `src/app/`, `src/components/`

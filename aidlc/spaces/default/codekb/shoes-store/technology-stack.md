@@ -1,77 +1,43 @@
-# Technology Stack — shoes-store
+# Technology Stack — Sole & Strand
 
-## Core Framework
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| Next.js | 14+ (App Router) | Full-stack React framework |
-| React | 18 | UI library |
-| TypeScript | 5.x | Type safety |
+## Language
+- **TypeScript** — Primary language for all source code (`tsconfig.json`, `.ts`/`.tsx` files)
+- **JavaScript** — Runtime; Next.js and React components accept both
 
-## Styling
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| Tailwind CSS | 3.x | Utility-first CSS |
-| PostCSS | 8.x | CSS processing |
-| Autoprefixer | 10.x | Vendor prefixes |
+## Frameworks & Libraries
+- **Next.js 13+** — React framework with App Router (`next.config.js`, `app/` directory)
+- **React** — UI library (`package.json` dependency)
+- **Tailwind CSS** — Utility-first styling framework (`tailwind.config.js`)
+- **Prisma ORM** — Database toolkit and client generator (`prisma/schema.prisma`, `@prisma/client`)
+- **Zod** (implied) — Based on validation patterns, though not explicitly listed in deps
 
-## Database & ORM
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| PostgreSQL | 15+ | Primary database |
-| Prisma | 5.x | Type-safe ORM |
-| @prisma/client | 5.x | Generated client |
+## Build & Tooling
+- **npm** — Package manager (`package.json`, `package-lock.json`)
+- **TypeScript Compiler** — `tsc` via `tsconfig.json`
+- **Next.js Development Server** — `next dev` (`package.json` scripts)
+- **Vercel** — Recommended deployment platform
 
-## Development Tools
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| ESLint | 8.x | Linting |
-| Prettier | 3.x | Formatting |
-| Jest | 29.x | Testing (configured) |
-| tsconfig.json | - | Strict TypeScript config |
+## Key Dependencies (package.json)
+| Package | Version | Purpose |
+|---------|---------|---------|
+| `next` | `latest` | React framework |
+| `react` | `latest` | UI library |
+| `react-dom` | `latest` | React DOM rendering |
+| `@prisma/client` | `latest` | Database client |
+| `prisma` | `latest` | ORM and migration tool |
+| `tailwindcss` | `latest` | Styling |
+| `postcss` | `latest` | CSS processing |
+| `` | `latest` | — |
 
-## Deployment & Infrastructure
-| Technology | Purpose |
-|------------|---------|
-| Vercel | Hosting, edge functions, image optimization |
-| Neon / Supabase / RDS | Managed PostgreSQL |
-| GitHub Actions | CI/CD (assumed) |
+## Development Environment
+- **Language**: TypeScript strict mode
+- **Formatter**: Prettier (configured in repo)
+- **Linter**: ESLint (configured in repo)
+- **Database**: PostgreSQL (connection string via `DATABASE_URL` env var)
+- **Deployment**: Vercel (auto-deploys on git push)
 
-## Package.json Dependencies (Key)
-```json
-{
-  "dependencies": {
-    "next": "14.x",
-    "react": "18.x",
-    "react-dom": "18.x",
-    "@prisma/client": "5.x"
-  },
-  "devDependencies": {
-    "typescript": "5.x",
-    "@types/react": "18.x",
-    "@types/node": "20.x",
-    "tailwindcss": "3.x",
-    "postcss": "8.x",
-    "autoprefixer": "10.x",
-    "prisma": "5.x",
-    "eslint": "8.x",
-    "jest": "29.x"
-  }
-}
-```
-
-## For Banner Feature (Additions)
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| Swiper.js | 11.x | Carousel library (swiper/react) |
-| @types/swiper | - | TypeScript types (built-in) |
-
-## Browser Support
-- Modern browsers (ES2020+)
-- Mobile Safari, Chrome, Firefox, Edge
-- No IE11 support
-
-## Performance Budgets
-- Next.js Image optimization (automatic)
-- Vercel Edge Network (global CDN)
-- Server Components (reduced client JS)
-- Target: LCP < 2.5s, CLS < 0.1, INP < 200ms
+## Architecture Decision Rationale
+- **Next.js App Router**: Chosen for modern React data fetching patterns (server components, streaming)
+- **Prisma ORM**: Selected for type-safe database access and migration workflow
+- **Tailwind CSS**: Enables rapid UI development with consistent design tokens (chalk/ink/rose/stone/pearl palette)
+- **API Routes**: Serverless functions on Vercel provide zero-config backend capability

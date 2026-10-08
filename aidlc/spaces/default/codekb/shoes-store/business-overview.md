@@ -1,31 +1,32 @@
-# Business Overview — shoes-store
+# Business Overview — Sole & Strand
 
-## Product Description
-An e-commerce platform for curated footwear and accessories ("Sole & Strand"). Sells sneakers, boots, bags, hats, and backpacks with seasonal drops, restocked classics, and promotional deals.
+**Domain**: E-commerce retail for footwear and accessories
+**Brand**: Sole & Strand
+**Tagline**: Curated footwear & accessories since 2024. Seasonal drops, restocked classics, and the deals worth catching.
 
-## Core Domain Entities
-- **Product**: Name, slug, description, category, variants
-- **Variant**: SKU, color, size, price, inventory
-- **Order**: Order number, items, total, status, payment method
-- **User**: Email, name, password hash, phone, addresses
-
-## Key Business Flows
-1. **Browse & Discover**: Homepage → Category pages → Product detail
-2. **Cart & Checkout**: Add to cart → Cart page → Order placement (COD/Card)
-3. **Admin Management**: Products CRUD, Order fulfillment
-
-## Revenue Model
-- Direct sales (COD and card payments)
-- Seasonal promotions and "Deal" tagged products
-- Bestseller/new arrival highlighting
+## Value Proposition
+- Curated selection of sneakers, boots, bags, and hats
+- Seasonal drops and restocked classics
+- Competitive pricing with COD (Cash on Delivery) support
+- User-friendly online shopping experience
 
 ## Target Audience
-- Footwear enthusiasts seeking curated selections
-- Seasonal shoppers (spring drops, restocks)
-- Deal-conscious buyers
+- Fashion-conscious consumers seeking footwear and accessories
+- Ages 18-45
+- Values style, quality, and reasonable pricing
 
-## Current Homepage Structure
-- **Static Hero Banner**: "NEW SEASON DROP" with CTA buttons
-- **Highlights Bar**: Filter tabs (Best Seller, New Arrival, Best Deals, categories)
-- **Featured Edit**: Hero product + 2 secondary cards
-- **Category Strips**: Horizontal scrolling cards per category
+## Key Metrics
+- Product catalog size and diversity
+- Order volume and conversion rate
+- Customer retention and repeat purchase rate
+- Inventory turnover
+
+## Market Position
+- Online-only direct-to-consumer brand
+- Competes with both established footwear retailers and fast-fashion e-commerce platforms
+- Differentiates through curated selection and seasonal drops
+
+## Business Model
+- Direct sales through own website (Next.js + TypeScript)
+- Cash on Delivery payment method supported
+- Standard e-commerce return/refund flow
