@@ -4,7 +4,7 @@
 - **Project**: explore the shoes store codebase
 - **Project Description Source**: project-description.json
 - **Project Type**: Brownfield
-- **Scope**: workshop
+- **Scope**: bugfix
 - **Start Date**: 2026-10-06T16:23:10Z
 - **State Version**: 8
 - **Active Agent**: aidlc-product-agent
@@ -13,15 +13,15 @@
 - **Practices Affirmed Timestamp**:
 
 ## Scope Configuration
-- **Stages to Execute**: 0.1, 0.2, 0.3, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7
-- **Stages to Skip**: 1.1 (intent-capture), 1.2 (market-research), 1.3 (feasibility), 1.4 (scope-definition), 1.5 (team-formation), 1.6 (rough-mockups), 1.7 (approval-handoff)
-- **Depth**: Standard
+- **Stages to Execute**: 0.1, 0.2, 0.3, 2.1, 2.3, 3.5, 3.6, 4.1, 4.3
+- **Stages to Skip**: 1.1 (intent-capture), 1.2 (market-research), 1.3 (feasibility), 1.4 (scope-definition), 1.5 (team-formation), 1.6 (rough-mockups), 1.7 (approval-handoff), 2.2 (practices-discovery), 2.4 (user-stories), 2.5 (refined-mockups), 2.6 (domain-design), 2.7 (units-generation), 2.8 (contract-design), 2.9 (delivery-planning), 3.1 (functional-design), 3.2 (nfr-requirements), 3.3 (nfr-design), 3.4 (infrastructure-design), 3.7 (ci-pipeline), 4.2 (environment-provisioning), 4.4 (observability-setup), 4.5 (incident-response), 4.6 (performance-validation), 4.7 (feedback-optimization)
+- **Depth**: Minimal
 - **Test Strategy**: Minimal
 - **Review Override**: 
-- **Change Control**: relaxed (from scope workshop)
-- **Sensors**: on (from scope workshop)
-- **Learnings**: on (from scope workshop)
-- **Summary Confirmation**: on (from scope workshop)
+- **Change Control**: relaxed (from scope bugfix)
+- **Sensors**: on (from scope bugfix)
+- **Learnings**: on (from scope bugfix)
+- **Summary Confirmation**: on (from scope bugfix)
 
 ## Workspace State
 - **Project Root**: .
@@ -30,8 +30,8 @@
 - **Build System**: npm (package.json)
 
 ## Execution Plan Summary
-- **Total Stages**: 26
-- **Completed**: 6
+- **Total Stages**: 9
+- **Completed**: 5
 - **In Progress**: user-stories
 
 ## Runtime State
@@ -47,7 +47,7 @@
 - **Operation**: Pending
 
 ## Stage Progress
-<!-- Checkbox states: [ ] not started, [-] in progress, [?] awaiting approval (gate open), [R] revising (user rejected gate), [x] completed, [S] skipped via --stage/--phase jump -->
+<!-- Checkbox states: [ ] not started, [-] in progress, [x] completed, [S] skipped via --stage/--phase jump -->
 
 ### INITIALIZATION PHASE
 - [x] workspace-scaffold — EXECUTE
@@ -65,40 +65,40 @@
 
 ### INCEPTION PHASE
 - [x] reverse-engineering — EXECUTE
-- [x] practices-discovery — EXECUTE
+- [x] practices-discovery — SKIP
 - [x] requirements-analysis — EXECUTE
-- [-] user-stories — EXECUTE
-- [x] refined-mockups — EXECUTE
-- [ ] domain-design — EXECUTE
-- [ ] units-generation — EXECUTE
-- [ ] contract-design — EXECUTE
-- [ ] delivery-planning — EXECUTE
+- [x] user-stories — SKIP
+- [x] refined-mockups — SKIP
+- [ ] domain-design — SKIP
+- [ ] units-generation — SKIP
+- [ ] contract-design — SKIP
+- [ ] delivery-planning — SKIP
 
 ### CONSTRUCTION PHASE
 Per unit: [TBD]
-- [ ] functional-design — EXECUTE
-- [ ] nfr-requirements — EXECUTE
-- [ ] nfr-design — EXECUTE
-- [ ] infrastructure-design — EXECUTE
+- [ ] functional-design — SKIP
+- [ ] nfr-requirements — SKIP
+- [ ] nfr-design — SKIP
+- [ ] infrastructure-design — SKIP
 - [ ] code-generation — EXECUTE
 - [ ] build-and-test — EXECUTE
-- [ ] ci-pipeline — EXECUTE
+- [ ] ci-pipeline — SKIP
 
 ### OPERATION PHASE
 - [ ] deployment-pipeline — EXECUTE
-- [ ] environment-provisioning — EXECUTE
+- [ ] environment-provisioning — SKIP
 - [ ] deployment-execution — EXECUTE
-- [ ] observability-setup — EXECUTE
-- [ ] incident-response — EXECUTE
-- [ ] performance-validation — EXECUTE
-- [ ] feedback-optimization — EXECUTE
+- [ ] observability-setup — SKIP
+- [ ] incident-response — SKIP
+- [ ] performance-validation — SKIP
+- [ ] feedback-optimization — SKIP
 
 ## Current Status
 - **Lifecycle Phase**: INCEPTION
 - **Current Stage**: construction
 - **Next Stage**: operation
-- **Status**: Running
-- **Last Updated**: 2026-10-08T00:00:00Z
+- **Status**: Archived
+- **Last Updated**: 2026-10-10T17:06:24Z
 
 ## Session Resume Point
 - **Last Completed Stage**: construction

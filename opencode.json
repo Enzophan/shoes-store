@@ -5,7 +5,7 @@
   "permission": {
     "edit": {
       "*": "allow",
-      ".aidlc/tools/**": "allow",
+      ".aidlc/tools/**": "ask",
       ".aidlc/hooks/**": "ask"
     },
     "bash": {

@@ -4,6 +4,13 @@
     "slug": "explore-the-shoes-store",
     "dirName": "261006-explore-the-shoes-store",
     "scope": "workshop",
+    "status": "archived"
+  },
+  {
+    "uuid": "01a126c7-c81f-70b2-bafd-34b2783b642d",
+    "slug": "bugfix",
+    "dirName": "261010-bugfix",
+    "scope": "bugfix",
     "status": "in-flight"
   }
 ]
