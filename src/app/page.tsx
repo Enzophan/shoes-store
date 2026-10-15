@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Metadata } from 'next'
 import ProductCard from '@/app/components/ProductCard'
 import BannerSlider from '@/app/components/BannerSlider'
+import BannerSliderPage from './admin/banners/slider/page'
 
 export const metadata: Metadata = {
   title: 'Sole & Strand — Curated Footwear & Accessories',
@@ -99,11 +100,12 @@ export default async function Home() {
       {/* Banner Slider */}
       <section className="pt-20 pb-32 lg:pt-32 lg:pb-48">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <BannerSlider
+          {/* <BannerSlider
             banners={[]}
             transitionInterval={10000}
             autoPlay={true}
-          />
+          /> */}
+          <BannerSliderPage />
         </div>
       </section>
 
@@ -115,11 +117,10 @@ export default async function Home() {
               <Link
                 key={item.label}
                 href={item.href}
-                className={`font-mono font-medium text-xs whitespace-nowrap px-4 py-2 rounded-full transition-all ${
-                  item.active
+                className={`font-mono font-medium text-xs whitespace-nowrap px-4 py-2 rounded-full transition-all ${item.active
                     ? 'bg-ink text-chalk shadow-[0_4px_12px_rgba(10,10,11,0.15)]'
                     : 'text-stone hover:text-ink hover:bg-pearl'
-                }`}
+                  }`}
                 role="listitem"
                 aria-current={item.active ? 'true' : 'false'}
               >

@@ -1,7 +1,9 @@
+"use client";
+
 import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'next/navigation'
-import { useForm } from 'react-hook-form'
-import { v4 as uuidv4 } from 'uuid'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link';
+import AddBanner from './add/page';
 
 interface Banner {
   id: string
@@ -19,47 +21,91 @@ interface BannerFormValues {
 }
 
 export default function AdminBanners() {
-  const navigate = useNavigate()
+  const router = useRouter()
   const [banners, setBanners] = useState<Banner[]>([])
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null)
   const [showForm, setShowForm] = useState(false)
+  const [formValues, setFormValues] = useState<BannerFormValues>({
+    imageUrl: '',
+    linkUrl: '',
+    displayOrder: 0,
+    isActive: true,
+  })
 
   // Fetch banners from API or use local state
   useEffect(() => {
     // In a real implementation, this would fetch from an API endpoint
-    // const fetchBanners = async () => {
-    //   const response = await fetch('/api/banners')
-    //   const data = await response.json()
-    //   setBanners(data)
-    // }
-    // fetchBanners()
-  }, [navigate])
-
-  const { register, handleSubmit, reset } = useForm<BannerFormValues>()
-
-  const onSubmit = async (data: BannerFormValues) => {
-    const newBanner: Banner = {
-      id: editingBanner?.id || uuidv4(),
-      imageUrl: data.imageUrl,
-      linkUrl: data.linkUrl,
-      displayOrder: data.displayOrder,
-      isActive: data.isActive,
+    const fetchBanners = async () => {
+      const response = await fetch('/api/banners')
+      const data = await response.json()
+      setBanners(data)
     }
+    fetchBanners()
+  }, [])
 
+  const handleSubmit = async (data: BannerFormValues) => {
     if (editingBanner) {
       // Update existing banner
+      const updatedBanner: Banner = {
+        ...editingBanner,
+        ...data,
+      }
       setBanners(
-        banners.map((banner) => (banner.id === editingBanner.id ? newBanner : banner))
+        banners.map((banner) => (banner.id === editingBanner.id ? updatedBanner : banner))
       )
     } else {
       // Add new banner
-      setBanners([...banners, newBanner])
+      const newBanner: Banner = {
+        id: crypto.randomUUID(),
+        ...data,
+      }
+      setBanners([...banners, newBanner]);
+      // Submit to API
+      const response = await fetch('/api/banners', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newBanner),
+      });
+      if (!response.ok) {
+        const errorData = await response.json()
+        alert('Failed to add banner: ' + (errorData.error || 'Unknown error'))
+        return
+      }
     }
-
-    reset()
     setShowForm(false)
     setEditingBanner(null)
   }
+  // const onSubmit = (event: React.FormEvent) => {
+  //   event.preventDefault()
+  //   const formData = new FormData(event.target as HTMLFormElement)
+  //   const imageUrl = formData.get('imageUrl') as string | undefined
+  //   const linkUrl = formData.get('linkUrl') as string | undefined
+  //   const displayOrder = formData.get('displayOrder') as string | undefined
+  //   const isActive = formData.get('isActive') === 'on'
+
+  //   const newBanner: Banner = {
+  //     id: editingBanner?.id || crypto.randomUUID(),
+  //     imageUrl: imageUrl ? imageUrl : (editingBanner?.imageUrl || ''),
+  //     linkUrl: linkUrl ? linkUrl : (editingBanner?.linkUrl || ''),
+  //     displayOrder: displayOrder ? Number(displayOrder) : (editingBanner?.displayOrder || 0),
+  //     isActive: isActive ?? editingBanner?.isActive ?? true,
+  //   }
+
+  //   if (editingBanner) {
+  //     // Update existing banner
+  //     setBanners(
+  //       banners.map((banner) => (banner.id === editingBanner.id ? newBanner : banner))
+  //     )
+  //   } else {
+  //     // Add new banner
+  //     setBanners([...banners, newBanner])
+  //   }
+
+  //   setShowForm(false)
+  //   setEditingBanner(null)
+  // }
 
   const deleteBanner = (bannerId: string) => {
     setBanners(banners.filter((banner) => banner.id !== bannerId))
@@ -68,6 +114,12 @@ export default function AdminBanners() {
   const startEdit = (banner: Banner) => {
     setEditingBanner(banner)
     setShowForm(true)
+    setFormValues({
+      imageUrl: banner.imageUrl,
+      linkUrl: banner.linkUrl,
+      displayOrder: banner.displayOrder,
+      isActive: banner.isActive,
+    })
   }
 
   return (
@@ -80,93 +132,104 @@ export default function AdminBanners() {
           <p className="mt-3 text-stone">
             Manage homepage rotating banners and themes.
           </p>
+          <div className="flex items-center gap-2 ml-auto">
+            <button
+              onClick={() => setShowForm(true)}
+              className="bg-rose text-chalk px-4 py-2 rounded hover:bg-rose/90 transition-colors text-sm"
+            >
+              <strong>+</strong> Add New Banner
+            </button>
+          </div>
         </header>
 
         {/* Add Banner Form */}
-        {showForm && (
-          <div className="bg-chalk p-6 border border-pearl rounded mb-6">
-            <h2 className="font-display font-bold text-lg text-ink mb-4">
-              {editingBanner ? 'Edit Banner' : 'Add New Banner'}
-            </h2>
-            <form onSubmit={onSubmit} className="space-y-4">
-              <div>
-                <label className="block text-stone mb-2 displayOrder" />
-                <input
-                  ...register({
-                    required: 'Image URL is required',
-                    pattern: {
-                      value: /^https?:\/\/.+/,
-                      message: 'Please enter a valid URL',
-                    },
-                  })
-                  className="w-full p-3 border border-pearl rounded focus-outline"
-                  placeholder="Image URL"
-                  defaultValue={editingBanner?.imageUrl || ''}
-                />
-              </div>
+        {showForm &&
+          <AddBanner
+            editingBanner={editingBanner}
+            onSubmit={handleSubmit}
+            onCancel={() => {
+              setShowForm(false)
+              setEditingBanner(null)
+            }}
+          />
+          // (
+          //   <div className="bg-chalk p-6 border border-pearl rounded mb-6">
+          //     <h2 className="font-display font-bold text-lg text-ink mb-4">
+          //       {editingBanner ? 'Edit Banner' : 'Add New Banner'}
+          //     </h2>
+          //     <form onSubmit={onSubmit} className="space-y-4">
+          //       <div>
+          //         <label className="block text-stone mb-2 displayOrder" />
+          //         <input
+          //           name="imageUrl"
+          //           type="text"
+          //           className="w-full p-3 border border-pearl rounded focus-outline"
+          //           placeholder="Image URL"
+          //           defaultValue={editingBanner?.imageUrl || ''}
+          //           required
+          //         />
+          //       </div>
 
-              <div>
-                <label className="block text-stone mb-2 linkUrl" />
-                <input
-                  ...register({
-                    required: 'Link URL is required',
-                    pattern: {
-                      value: /^https?:\/\/.+/,
-                      message: 'Please enter a valid URL',
-                    },
-                  })
-                  className="w-full p-3 border border-pearl rounded focus-outline"
-                  placeholder="Link URL"
-                  defaultValue={editingBanner?.linkUrl || ''}
-                />
-              </div>
+          //       <div>
+          //         <label className="block text-stone mb-2 linkUrl" />
+          //         <input
+          //           name="linkUrl"
+          //           type="text"
+          //           className="w-full p-3 border border-pearl rounded focus-outline"
+          //           placeholder="Link URL"
+          //           defaultValue={editingBanner?.linkUrl || ''}
+          //           required
+          //         />
+          //       </div>
 
-              <div>
-                <label className="block text-stone mb-2 displayOrder" />
-                <input
-                  ...register({ required: 'Display order is required' })
-                  type="number"
-                  className="w-full p-3 border border-pearl rounded focus-outline"
-                  placeholder="Display order (numeric)"
-                  defaultValue={editingBanner?.displayOrder?.toString() || ''}
-                />
-              </div>
+          //       <div>
+          //         <label className="block text-stone mb-2 displayOrder" />
+          //         <input
+          //           name="displayOrder"
+          //           type="number"
+          //           className="w-full p-3 border border-pearl rounded focus-outline"
+          //           placeholder="Display order (numeric)"
+          //           defaultValue={editingBanner?.displayOrder?.toString() || ''}
+          //           required
+          //         />
+          //       </div>
 
-              <div>
-                <label className="block text-stone mb-2 isActive" />
-                <div className="flex items-center gap-2">
-                  <input
-                    ...register({ required: 'Status is required' })
-                    type="checkbox"
-                    defaultChecked={editingBanner?.isActive ?? true}
-                    className="w-4 h-4 rounded border focus-outline"
-                  />
-                  <span className="text-stone">Active</span>
-                </div>
-              </div>
+          //       <div>
+          //         <label className="block text-stone mb-2 isActive" />
+          //         <div className="flex items-center gap-2">
+          //           <input
+          //             name="isActive"
+          //             type="checkbox"
+          //             defaultChecked={editingBanner?.isActive ?? true}
+          //             className="w-4 h-4 rounded border focus-outline"
+          //           />
+          //           <span className="text-stone">Active</span>
+          //         </div>
+          //       </div>
 
-              <div className="flex gap-3">
-                <button
-                  type="submit"
-                  className="bg-rose text-chalk px-4 py-2 rounded hover:bg-rose/90 transition-colors"
-                >
-                  {editingBanner ? 'Update Banner' : 'Add Banner'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    reset()
-                    setShowForm(false)
-                    setEditingBanner(null)
-                  }}
-                  className="bg-pearl text-ink px-4 py-2 rounded hover:bg-pearl/90 transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
+          //       <div className="flex gap-3">
+          //         <button
+          //           type="submit"
+          //           className="bg-rose text-chalk px-4 py-2 rounded hover:bg-rose/90 transition-colors"
+          //         >
+          //           {editingBanner ? 'Update Banner' : 'Add Banner'}
+          //         </button>
+          //         <button
+          //           type="button"
+          //           onClick={() => {
+          //             setShowForm(false)
+          //             setEditingBanner(null)
+          //           }}
+          //           className="bg-pearl text-ink px-4 py-2 rounded hover:bg-pearl/90 transition-colors"
+          //         >
+          //           Cancel
+          //         </button>
+          //       </div>
+          //     </form>
+          //   </div>
+          // )
+
+        }
 
         {/* Banner List Table */}
         <div className="mt-6 overflow-x-auto">
@@ -184,12 +247,19 @@ export default function AdminBanners() {
               {banners.length === 0 && (
                 <tr>
                   <td colSpan={5} className="p-6 text-center text-stone">
-                    No banners configured. <a
+                    No banners configured.
+                    {/* <a
                       href="/admin/banners/add"
                       className="text-rose hover:text-rose/90 transition-colors"
                     >
                       Add first banner
-                    </a>
+                    </a> */}
+                    <Link
+                      href="/admin/banners/add"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-ink text-chalk font-medium text-sm rounded transition-colors hover:bg-stone focus-visible:outline-rose"
+                    >
+                      + Add banner
+                    </Link>
                   </td>
                 </tr>
               )}

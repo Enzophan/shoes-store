@@ -9,13 +9,20 @@ export default function AdminHome() {
           <p className="mt-3 text-stone">Manage products, inventory, and orders.</p>
         </header>
 
-        <div className="grid sm:grid-cols-2 gap-4">
+        <div className="grid sm:grid-cols-3 gap-4">
           <Link
             href="/admin/products"
             className="bg-chalk p-6 border border-pearl rounded transition-all hover:border-ink hover:shadow-lg"
           >
             <h2 className="font-display font-bold text-lg text-ink mb-2">Manage Products</h2>
             <p className="text-stone text-sm">Create, edit, and organize products and variants.</p>
+          </Link>
+          <Link
+            href="/admin/banners"
+            className="bg-chalk p-6 border border-pearl rounded transition-all hover:border-ink hover:shadow-lg"
+          >
+            <h2 className="font-display font-bold text-lg text-ink mb-2">Banner Management</h2>
+            <p className="text-stone text-sm">Manage homepage rotating banners.</p>
           </Link>
           <Link
             href="/admin/orders"
