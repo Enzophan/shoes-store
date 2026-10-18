@@ -16,6 +16,7 @@ export default function NewProductPage() {
   const [slug, setSlug] = useState('')
   const [description, setDescription] = useState('')
   const [category, setCategory] = useState('')
+  const [imageUrl, setImageUrl] = useState('')
   const [variants, setVariants] = useState<Variant[]>([{ sku: '', color: '', size: '', price: 0, inventory: 0 }])
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -54,6 +55,7 @@ export default function NewProductPage() {
           slug,
           description: description || null,
           category,
+          imageUrl: imageUrl || null,
           variants: validVariants
         })
       })
@@ -135,6 +137,19 @@ export default function NewProductPage() {
                 className="w-full px-4 py-3 border border-pearl bg-white text-ink placeholder-stone focus:border-ink focus:outline-none focus:ring-2 focus:ring-rose-soft transition-colors resize-y"
                 placeholder="Product description..."
               />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="imageUrl" className="block font-medium text-sm text-ink">Image URL</label>
+              <input
+                id="imageUrl"
+                type="text"
+                value={imageUrl || ''}
+                onChange={(e) => setImageUrl(e.target.value)}
+                placeholder="e.g., https://example.com/image.jpg"
+                className="w-full px-4 py-3 border border-pearl bg-white text-ink placeholder-stone focus:border-ink focus:outline-none focus:ring-2 focus:ring-rose-soft transition-colors"
+              />
+              <p className="font-mono text-xs text-stone">Optional. Image display on product page and home page.</p>
             </div>
           </section>
 

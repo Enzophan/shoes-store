@@ -23,6 +23,7 @@ model Product {
   slug      String    @unique
   description String?
   category  String
+  image     String?   // Product image URL for display on product page and home page
   variants  Variant[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt

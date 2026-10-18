@@ -18,6 +18,7 @@ export async function POST(request: Request) {
       slug: body.slug,
       description: body.description,
       category: body.category,
+      image: body.image,
       variants: {
         create: body.variants
       }

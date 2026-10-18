@@ -107,8 +107,14 @@ export default function AdminBanners() {
   //   setEditingBanner(null)
   // }
 
-  const deleteBanner = (bannerId: string) => {
-    setBanners(banners.filter((banner) => banner.id !== bannerId))
+  const deleteBanner = async (bannerId: string) => {
+    const response = await fetch(`/api/banners?id=${bannerId}`, {
+      method: 'DELETE',
+    })
+    const data = await response.json()
+    if (data.success) {
+      setBanners(banners.filter((banner) => banner.id !== bannerId))
+    }
   }
 
   const startEdit = (banner: Banner) => {

@@ -69,3 +69,8 @@ Next steps
 - Add authentication, email notifications, and production deployment scripts.
 
 # shoes-store
+
+# Prisma 
+
+- $ npx prisma studio
+

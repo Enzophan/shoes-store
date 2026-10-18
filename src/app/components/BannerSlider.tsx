@@ -17,6 +17,7 @@ interface BannerSliderProps {
 }
 
 const DEFAULT_TRANSITION_INTERVAL = 10000 // 10 seconds
+const BANNER_HEIGHT = '350px'
 
 export function BannerSlider({ banners, transitionInterval = DEFAULT_TRANSITION_INTERVAL, autoPlay = true }: BannerSliderProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -66,7 +67,7 @@ export function BannerSlider({ banners, transitionInterval = DEFAULT_TRANSITION_
 
   if (banners.length === 0) {
     return (
-      <div className="min-h-[300px] flex items-center justify-center text-stone text-lg bg-pearl/50">
+      <div className={`min-h-[${BANNER_HEIGHT}] flex items-center justify-center text-stone text-lg bg-pearl/50`}>
         <p>No banners configured</p>
       </div>
     )
@@ -74,7 +75,7 @@ export function BannerSlider({ banners, transitionInterval = DEFAULT_TRANSITION_
 
   return (
     <div
-      className="relative min-h-[400px] overflow-hidden rounded-lg shadow-lg bg-pearl/50"
+      className={`relative min-h-[${BANNER_HEIGHT}] overflow-hidden rounded-lg shadow-lg bg-pearl/50`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
