@@ -58,7 +58,7 @@ export default function EditProduct({ product }: { product: any }) {
           name,
           description: description || null,
           category,
-          imageUrl: imageUrl || null
+          image: imageUrl || null
         })
       })
       const data = await res.json()
@@ -135,7 +135,7 @@ export default function EditProduct({ product }: { product: any }) {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-ink text-chalk font-medium text-sm rounded transition-colors hover:bg-stone focus-visible:outline-rose disabled:opacity-50 disabled:cursor-not-allowed"
+          className="border-1 inline-flex items-center gap-2 px-4 py-2.5 bg-ink text-chalk font-medium text-sm rounded transition-colors hover:bg-stone focus-visible:outline-rose disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isSubmitting ? 'Updating...' : 'Update Product'}
         </button>
