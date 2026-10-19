@@ -1,6 +1,7 @@
 "use client"
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
+import EditVariant from './EditVariant'
 
 interface Variant {
   id: number
@@ -149,7 +150,8 @@ export default function EditProduct({ product }: { product: any }) {
 
       {/* Variants Table */}
       <div className="overflow-x-auto">
-        <table className="w-full table-auto border">
+        <EditVariant variants={variants} />
+        {/* <table className="w-full table-auto border">
           <thead>
             <tr className="bg-gray-100">
               <th className="p-2">SKU</th>
@@ -192,7 +194,7 @@ export default function EditProduct({ product }: { product: any }) {
             ))}
 
           </tbody>
-        </table>
+        </table> */}
       </div>
     </div>
   )
