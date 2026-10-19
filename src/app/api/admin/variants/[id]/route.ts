@@ -8,9 +8,10 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     const id = Number(params.id)
     const body = await request.json()
     if (typeof body.inventory !== 'number') return NextResponse.json({ error: 'inventory must be a number' }, { status: 400 })
+    if (typeof body.price !== 'number') return NextResponse.json({ error: 'price must be a number' }, { status: 400 })
 
-    const updated = await prisma.variant.update({ where: { id }, data: { inventory: body.inventory } })
-    return NextResponse.json({ id: updated.id, inventory: updated.inventory })
+    const updated = await prisma.variant.update({ where: { id }, data: { inventory: body.inventory, price: body.price } })
+    return NextResponse.json({ id: updated.id, inventory: updated.inventory, price: updated.price })
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Server error' }, { status: 500 })
   }

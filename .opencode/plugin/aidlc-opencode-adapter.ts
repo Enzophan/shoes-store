@@ -401,412 +401,415 @@ function sessionStartHandled(stdout: string): boolean {
   }
 }
 
-export default async ({
-  client,
-  directory,
-  aidlcEntrypoints = shippedAidlcEntrypoints,
-  aidlcCommand = DEFAULT_AIDLC_COMMAND,
-}: PluginInput) => {
-  const runCore = (
-    hookFile: string,
-    input: Record<string, unknown>,
-    _cwd = directory,
-  ) => runCoreHook(hookFile, input, directory, aidlcCommand);
+export default {
+  id: "aidlc-opencode-adapter",
+  server: async ({
+    client,
+    directory,
+    aidlcEntrypoints = shippedAidlcEntrypoints,
+    aidlcCommand = DEFAULT_AIDLC_COMMAND,
+  }: PluginInput) => {
+    const runCore = (
+      hookFile: string,
+      input: Record<string, unknown>,
+      _cwd = directory,
+    ) => runCoreHook(hookFile, input, directory, aidlcCommand);
 
-  // Sessions whose session-start hook reached an active workflow.
-  const started = new Set<string>();
-  // Main sessions that delivered a real human turn. Stop enforcement keys on
-  // this lighter latch because workflow state can be created during turn one.
-  const sawHumanTurn = new Set<string>();
-  // Sessions confirmed as main (no parentID) — presence + continue-workflow enforcement
-  // apply only to these; child (task-tool) sessions are workers, not humans.
-  const mainSession = new Map<string, boolean>();
-  const sessionAgent = new Map<string, string>();
-  const idleInFlight = new Set<string>();
+    // Sessions whose session-start hook reached an active workflow.
+    const started = new Set<string>();
+    // Main sessions that delivered a real human turn. Stop enforcement keys on
+    // this lighter latch because workflow state can be created during turn one.
+    const sawHumanTurn = new Set<string>();
+    // Sessions confirmed as main (no parentID) — presence + continue-workflow enforcement
+    // apply only to these; child (task-tool) sessions are workers, not humans.
+    const mainSession = new Map<string, boolean>();
+    const sessionAgent = new Map<string, string>();
+    const idleInFlight = new Set<string>();
 
-  async function isMainSession(sessionID: string): Promise<boolean> {
-    const cached = mainSession.get(sessionID);
-    if (cached !== undefined) return cached;
-    try {
-      const s = await client.session.get({ path: { id: sessionID } });
-      const main = !s.data?.parentID;
-      mainSession.set(sessionID, main);
-      return main;
-    } catch {
-      // An uncertain child must never record-human-turn human presence. Do not cache the
-      // transient failure; a later event gets a fresh lookup.
-      return false;
+    async function isMainSession(sessionID: string): Promise<boolean> {
+      const cached = mainSession.get(sessionID);
+      if (cached !== undefined) return cached;
+      try {
+        const s = await client.session.get({ path: { id: sessionID } });
+        const main = !s.data?.parentID;
+        mainSession.set(sessionID, main);
+        return main;
+      } catch {
+        // An uncertain child must never record-human-turn human presence. Do not cache the
+        // transient failure; a later event gets a fresh lookup.
+        return false;
+      }
     }
-  }
 
-  return {
-    "chat.message": async (
-      input: { sessionID: string; agent?: string },
-      output: { parts: Array<{ type?: string; text?: string }> },
-    ) => {
-      if (input.agent) sessionAgent.set(input.sessionID, input.agent);
-      // Never treat this plugin's own continue-workflow-nudge injection as a human turn.
-      const first = output.parts.find((p) => p.type === "text");
-      if (first?.text?.startsWith(NUDGE_SENTINEL)) return;
-      if (!(await isMainSession(input.sessionID))) return;
-      sawHumanTurn.add(input.sessionID);
-      if (!started.has(input.sessionID)) {
-        const result = await runCore(
-          "aidlc-session-start.ts",
+    return {
+      "chat.message": async (
+        input: { sessionID: string; agent?: string },
+        output: { parts: Array<{ type?: string; text?: string }> },
+      ) => {
+        if (input.agent) sessionAgent.set(input.sessionID, input.agent);
+        // Never treat this plugin's own continue-workflow-nudge injection as a human turn.
+        const first = output.parts.find((p) => p.type === "text");
+        if (first?.text?.startsWith(NUDGE_SENTINEL)) return;
+        if (!(await isMainSession(input.sessionID))) return;
+        sawHumanTurn.add(input.sessionID);
+        if (!started.has(input.sessionID)) {
+          const result = await runCore(
+            "aidlc-session-start.ts",
+            {
+              hook_event_name: "SessionStart",
+              source: "startup",
+              session_id: input.sessionID,
+            },
+            directory,
+          );
+          // A fresh project has no state yet, so the core hook emits no context.
+          // Retry on later human turns until an active workflow is available.
+          if (sessionStartHandled(result.stdout)) started.add(input.sessionID);
+        }
+        await runCore(
+          "aidlc-record-human-turn.ts",
           {
-            hook_event_name: "SessionStart",
-            source: "startup",
+            hook_event_name: "UserPromptSubmit",
             session_id: input.sessionID,
+            prompt: first?.text ?? "",
           },
           directory,
         );
-        // A fresh project has no state yet, so the core hook emits no context.
-        // Retry on later human turns until an active workflow is available.
-        if (sessionStartHandled(result.stdout)) started.add(input.sessionID);
-      }
-      await runCore(
-        "aidlc-record-human-turn.ts",
-        {
-          hook_event_name: "UserPromptSubmit",
-          session_id: input.sessionID,
-          prompt: first?.text ?? "",
-        },
-        directory,
-      );
-    },
-
-    "tool.execute.before": async (
-      input: { tool: string; sessionID: string; callID: string },
-      output: { args: Record<string, unknown> },
-    ) => {
-      const args = output.args ?? {};
-      if (input.tool === "task") {
-        const dispatch = await runCore(
-          "aidlc-deliver-stage-rules.ts",
-          {
-            hook_event_name: "PreToolUse",
-            session_id: input.sessionID,
-            tool_name: "task",
-            tool_input: args,
-            cwd: directory,
-          },
-          directory,
-        );
-        if (dispatch.code === 2) {
-          throw new Error(
-            dispatch.stderr.trim() ||
-              "required active-stage rules could not be loaded for subagent dispatch",
-          );
-        }
-        if (dispatch.stdout.trim()) {
-          try {
-            const parsed = JSON.parse(dispatch.stdout) as {
-              hookSpecificOutput?: {
-                updatedInput?: Record<string, unknown>;
-              };
-            };
-            if (parsed.hookSpecificOutput?.updatedInput) {
-              output.args = parsed.hookSpecificOutput.updatedInput;
-            }
-          } catch {
-            throw new Error(
-              "AIDLC deliver-stage-rules hook returned invalid rewrite output",
-            );
-          }
-        }
-      }
-      const namedAgent = sessionAgent.get(input.sessionID);
-      const delegatedAgent =
-        namedAgent?.startsWith("aidlc-") && namedAgent.endsWith("-agent")
-          ? namedAgent
-          : null;
-      if (input.tool === "bash") {
-        const command = (args.command as string) ?? "";
-        const violation = aidlcBashBoundaryViolation(command, aidlcEntrypoints);
-        if (violation) throw new Error(violation);
-        // State-transition guard, parallel to the Claude/Kiro/Codex PreToolUse
-        // wiring. The state CLI's ownership check remains the hard floor; this
-        // gives the conductor the same immediate redirect the other harnesses
-        // get instead of a late CLI error.
-        const guard = await runCore(
-          "aidlc-state-transition-guard.ts",
-          {
-            hook_event_name: "PreToolUse",
-            tool_name: "Bash",
-            tool_input: { command },
-            cwd: directory,
-            ...(delegatedAgent ? { agent_type: delegatedAgent } : {}),
-          },
-          directory,
-        );
-        if (guard.code === 2) {
-          throw new Error(
-            guard.stderr.trim() ||
-              "stage status is changed by the workflow tools, not by hand: use aidlc-orchestrate.ts report instead of calling aidlc-state.ts directly",
-          );
-        }
-      }
-
-      // Review-freeze (§12a terminal-receipt write-freeze): runs for EVERY
-      // agent - unlike reviewer-scope there is no identity gate, because any
-      // produces[] write voids a fresh READY receipt regardless of who makes
-      // it. The core hook self-filters to write tools and fails open.
-      if (
-        input.tool === "bash" ||
-        input.tool === "write" ||
-        input.tool === "edit" ||
-        input.tool === "apply_patch"
-      ) {
-        const freezeCalls =
-          input.tool === "bash"
-            ? [{ toolName: "Bash", toolInput: { command: (args.command as string) ?? "" } }]
-            : (input.tool === "apply_patch" ? applyPatchPaths(args) : [
-                (args.filePath as string) ?? (args.path as string) ?? "",
-              ])
-                .filter((filePath) => filePath.length > 0)
-                .map((filePath) => ({
-                  toolName: input.tool === "edit" ? "Edit" : "Write",
-                  toolInput: { file_path: filePath },
-                }));
-        for (const call of freezeCalls) {
-          const freeze = await runCore(
-            "aidlc-review-freeze.ts",
-            {
-              hook_event_name: "PreToolUse",
-              tool_name: call.toolName,
-              tool_input: call.toolInput,
-              cwd: directory,
-            },
-            directory,
-          );
-          if (freeze.code === 2) {
-            throw new Error(
-              freeze.stderr.trim() ||
-                "review-freeze: this write would invalidate a fresh READY review receipt",
-            );
-          }
-        }
-      }
-
-      // Plan-approval guard: workspace mutations share the same normalized
-      // calls as review-freeze, while task dispatches carry the explicit
-      // approval target and Testing Contract markers.
-      if (
-        input.tool === "bash" ||
-        input.tool === "write" ||
-        input.tool === "edit" ||
-        input.tool === "apply_patch"
-      ) {
-        const planCalls =
-          input.tool === "bash"
-            ? [{ toolName: "Bash", toolInput: { command: (args.command as string) ?? "" } }]
-            : (input.tool === "apply_patch" ? applyPatchPaths(args) : [
-                (args.filePath as string) ?? (args.path as string) ?? "",
-              ])
-                .filter((filePath) => filePath.length > 0)
-                .map((filePath) => ({
-                  toolName: input.tool === "edit" ? "Edit" : "Write",
-                  toolInput: { file_path: filePath },
-                }));
-        for (const call of planCalls) {
-          const guard = await runCore(
-            "aidlc-plan-approval-guard.ts",
-            {
-              hook_event_name: "PreToolUse",
-              tool_name: call.toolName,
-              tool_input: call.toolInput,
-              cwd: directory,
-            },
-            directory,
-          );
-          if (guard.code === 2) {
-            throw new Error(
-              guard.stderr.trim() ||
-                "code-generation requires an approved plan before workspace mutation",
-            );
-          }
-        }
-      }
-
-      if (input.tool === "task") {
-        const target =
-          (args.subagent_type as string) ?? (args.agent as string) ?? "";
-        if (target === "aidlc-developer-agent") {
-          const guard = await runCore(
-            "aidlc-plan-approval-guard.ts",
-            {
-              hook_event_name: "PreToolUse",
-              tool_name: "Task",
-              tool_input: {
-                subagent_type: target,
-                prompt: [(args.prompt as string) ?? "", (args.description as string) ?? ""]
-                  .filter((t) => t.length > 0)
-                  .join("\n"),
-              },
-              cwd: directory,
-            },
-            directory,
-          );
-          if (guard.code === 2) {
-            throw new Error(
-              guard.stderr.trim() ||
-                "code-generation requires an approved plan before dispatching the developer agent",
-            );
-          }
-        }
-      }
-
-      const calls = reviewerCalls(input.tool, args);
-      if (calls.length === 0) return;
-
-      const agent = namedAgent;
-      const identity =
-        agent
-          ? { agent_type: agent }
-          : (await isMainSession(input.sessionID))
-            ? null
-            : { scoped_registration: true };
-      if (identity === null) return;
-
-      for (const call of calls) {
-        const result = await runCore(
-          "aidlc-reviewer-scope.ts",
-          {
-            hook_event_name: "PreToolUse",
-            tool_name: call.toolName,
-            tool_input: call.toolInput,
-            cwd: directory,
-            ...identity,
-          },
-          directory,
-        );
-        if (result.code === 2) {
-          throw new Error(result.stderr.trim() || "reviewer read-scope refused this tool call");
-        }
-      }
-    },
-
-    "tool.execute.after": async (
-      input: {
-        tool: string;
-        sessionID: string;
-        callID: string;
-        args: Record<string, unknown>;
       },
-      output?: { output?: string },
-    ) => {
-      const { tool, args } = input;
-      if (tool === "write" || tool === "edit" || tool === "apply_patch") {
-        const paths =
-          tool === "apply_patch"
-            ? applyPatchPaths(args)
-            : [((args.filePath as string) ?? (args.path as string) ?? "")];
-        for (const filePath of paths) {
-          if (!filePath) continue;
-          const absolutePath = isAbsolute(filePath) ? filePath : join(directory, filePath);
+
+      "tool.execute.before": async (
+        input: { tool: string; sessionID: string; callID: string },
+        output: { args: Record<string, unknown> },
+      ) => {
+        const args = output.args ?? {};
+        if (input.tool === "task") {
+          const dispatch = await runCore(
+            "aidlc-deliver-stage-rules.ts",
+            {
+              hook_event_name: "PreToolUse",
+              session_id: input.sessionID,
+              tool_name: "task",
+              tool_input: args,
+              cwd: directory,
+            },
+            directory,
+          );
+          if (dispatch.code === 2) {
+            throw new Error(
+              dispatch.stderr.trim() ||
+                "required active-stage rules could not be loaded for subagent dispatch",
+            );
+          }
+          if (dispatch.stdout.trim()) {
+            try {
+              const parsed = JSON.parse(dispatch.stdout) as {
+                hookSpecificOutput?: {
+                  updatedInput?: Record<string, unknown>;
+                };
+              };
+              if (parsed.hookSpecificOutput?.updatedInput) {
+                output.args = parsed.hookSpecificOutput.updatedInput;
+              }
+            } catch {
+              throw new Error(
+                "AIDLC deliver-stage-rules hook returned invalid rewrite output",
+              );
+            }
+          }
+        }
+        const namedAgent = sessionAgent.get(input.sessionID);
+        const delegatedAgent =
+          namedAgent?.startsWith("aidlc-") && namedAgent.endsWith("-agent")
+            ? namedAgent
+            : null;
+        if (input.tool === "bash") {
+          const command = (args.command as string) ?? "";
+          const violation = aidlcBashBoundaryViolation(command, aidlcEntrypoints);
+          if (violation) throw new Error(violation);
+          // State-transition guard, parallel to the Claude/Kiro/Codex PreToolUse
+          // wiring. The state CLI's ownership check remains the hard floor; this
+          // gives the conductor the same immediate redirect the other harnesses
+          // get instead of a late CLI error.
+          const guard = await runCore(
+            "aidlc-state-transition-guard.ts",
+            {
+              hook_event_name: "PreToolUse",
+              tool_name: "Bash",
+              tool_input: { command },
+              cwd: directory,
+              ...(delegatedAgent ? { agent_type: delegatedAgent } : {}),
+            },
+            directory,
+          );
+          if (guard.code === 2) {
+            throw new Error(
+              guard.stderr.trim() ||
+                "stage status is changed by the workflow tools, not by hand: use aidlc-orchestrate.ts report instead of calling aidlc-state.ts directly",
+            );
+          }
+        }
+
+        // Review-freeze (§12a terminal-receipt write-freeze): runs for EVERY
+        // agent - unlike reviewer-scope there is no identity gate, because any
+        // produces[] write voids a fresh READY receipt regardless of who makes
+        // it. The core hook self-filters to write tools and fails open.
+        if (
+          input.tool === "bash" ||
+          input.tool === "write" ||
+          input.tool === "edit" ||
+          input.tool === "apply_patch"
+        ) {
+          const freezeCalls =
+            input.tool === "bash"
+              ? [{ toolName: "Bash", toolInput: { command: (args.command as string) ?? "" } }]
+              : (input.tool === "apply_patch" ? applyPatchPaths(args) : [
+                (args.filePath as string) ?? (args.path as string) ?? "",
+              ])
+                .filter((filePath) => filePath.length > 0)
+                .map((filePath) => ({
+                  toolName: input.tool === "edit" ? "Edit" : "Write",
+                  toolInput: { file_path: filePath },
+                }));
+          for (const call of freezeCalls) {
+            const freeze = await runCore(
+              "aidlc-review-freeze.ts",
+              {
+                hook_event_name: "PreToolUse",
+                tool_name: call.toolName,
+                tool_input: call.toolInput,
+                cwd: directory,
+              },
+              directory,
+            );
+            if (freeze.code === 2) {
+              throw new Error(
+                freeze.stderr.trim() ||
+                  "review-freeze: this write would invalidate a fresh READY review receipt",
+              );
+            }
+          }
+        }
+
+        // Plan-approval guard: workspace mutations share the same normalized
+        // calls as review-freeze, while task dispatches carry the explicit
+        // approval target and Testing Contract markers.
+        if (
+          input.tool === "bash" ||
+          input.tool === "write" ||
+          input.tool === "edit" ||
+          input.tool === "apply_patch"
+        ) {
+          const planCalls =
+            input.tool === "bash"
+              ? [{ toolName: "Bash", toolInput: { command: (args.command as string) ?? "" } }]
+              : (input.tool === "apply_patch" ? applyPatchPaths(args) : [
+                (args.filePath as string) ?? (args.path as string) ?? "",
+              ])
+                .filter((filePath) => filePath.length > 0)
+                .map((filePath) => ({
+                  toolName: input.tool === "edit" ? "Edit" : "Write",
+                  toolInput: { file_path: filePath },
+                }));
+          for (const call of planCalls) {
+            const guard = await runCore(
+              "aidlc-plan-approval-guard.ts",
+              {
+                hook_event_name: "PreToolUse",
+                tool_name: call.toolName,
+                tool_input: call.toolInput,
+                cwd: directory,
+              },
+              directory,
+            );
+            if (guard.code === 2) {
+              throw new Error(
+                guard.stderr.trim() ||
+                  "code-generation requires an approved plan before workspace mutation",
+              );
+            }
+          }
+        }
+
+        if (input.tool === "task") {
+          const target =
+            (args.subagent_type as string) ?? (args.agent as string) ?? "";
+          if (target === "aidlc-developer-agent") {
+            const guard = await runCore(
+              "aidlc-plan-approval-guard.ts",
+              {
+                hook_event_name: "PreToolUse",
+                tool_name: "Task",
+                tool_input: {
+                  subagent_type: target,
+                  prompt: [(args.prompt as string) ?? "", (args.description as string) ?? ""]
+                    .filter((t) => t.length > 0)
+                    .join("\n"),
+                },
+                cwd: directory,
+              },
+              directory,
+            );
+            if (guard.code === 2) {
+              throw new Error(
+                guard.stderr.trim() ||
+                  "code-generation requires an approved plan before dispatching the developer agent",
+              );
+            }
+          }
+        }
+
+        const calls = reviewerCalls(input.tool, args);
+        if (calls.length === 0) return;
+
+        const agent = namedAgent;
+        const identity =
+          agent
+            ? { agent_type: agent }
+            : (await isMainSession(input.sessionID))
+              ? null
+              : { scoped_registration: true };
+        if (identity === null) return;
+
+        for (const call of calls) {
+          const result = await runCore(
+            "aidlc-reviewer-scope.ts",
+            {
+              hook_event_name: "PreToolUse",
+              tool_name: call.toolName,
+              tool_input: call.toolInput,
+              cwd: directory,
+              ...identity,
+            },
+            directory,
+          );
+          if (result.code === 2) {
+            throw new Error(result.stderr.trim() || "reviewer read-scope refused this tool call");
+          }
+        }
+      },
+
+      "tool.execute.after": async (
+        input: {
+          tool: string;
+          sessionID: string;
+          callID: string;
+          args: Record<string, unknown>;
+        },
+        output?: { output?: string },
+      ) => {
+        const { tool, args } = input;
+        if (tool === "write" || tool === "edit" || tool === "apply_patch") {
+          const paths =
+            tool === "apply_patch"
+              ? applyPatchPaths(args)
+              : [((args.filePath as string) ?? (args.path as string) ?? "")];
+          for (const filePath of paths) {
+            if (!filePath) continue;
+            const absolutePath = isAbsolute(filePath) ? filePath : join(directory, filePath);
+            const payload = {
+              hook_event_name: "PostToolUse",
+              tool_name: "Write",
+              tool_input: { file_path: absolutePath },
+            };
+            // audit THEN sensors, mirroring the Claude settings.json order.
+            await runCore("aidlc-write-audit-log.ts", payload, directory);
+            await runCore("aidlc-run-sensors.ts", payload, directory);
+          }
+          return;
+        }
+        if (tool === "bash") {
           const payload = {
             hook_event_name: "PostToolUse",
-            tool_name: "Write",
-            tool_input: { file_path: absolutePath },
-          };
-          // audit THEN sensors, mirroring the Claude settings.json order.
-          await runCore("aidlc-write-audit-log.ts", payload, directory);
-          await runCore("aidlc-run-sensors.ts", payload, directory);
-        }
-        return;
-      }
-      if (tool === "bash") {
-        const payload = {
-          hook_event_name: "PostToolUse",
-          tool_name: "Bash",
-          tool_input: { command: (args.command as string) ?? "" },
-          session_id: input.sessionID,
-          tool_response: output?.output ?? "",
-        };
-        await runCore("aidlc-rebuild-stage-graph.ts", payload, directory);
-        return;
-      }
-      if (tool === "todowrite") {
-        // The core hook keys on Claude's TaskUpdate in_progress transition;
-        // map the first in-progress todo's content onto activeForm.
-        const todos = (args.todos as Array<{ content?: string; status?: string }>) ?? [];
-        const active = todos.find((t) => t.status === "in_progress");
-        if (!active?.content) return;
-        await runCore(
-          "aidlc-sync-workflow-state.ts",
-          {
-            hook_event_name: "PostToolUse",
-            tool_name: "TaskUpdate",
-            tool_input: { status: "in_progress", activeForm: active.content },
-          },
-          directory,
-        );
-        return;
-      }
-      if (tool === "task") {
-        await runCore(
-          "aidlc-log-subagent.ts",
-          {
-            hook_event_name: "SubagentStop",
+            tool_name: "Bash",
+            tool_input: { command: (args.command as string) ?? "" },
             session_id: input.sessionID,
-            agent_type:
-              (args.subagent_type as string) ?? (args.agent as string) ?? "unknown",
-            agent_id: input.callID,
-          },
-          directory,
-        );
-      }
-    },
-
-    "experimental.session.compacting": async (_input: { sessionID: string }) => {
-      await runCore("aidlc-validate-state.ts", { hook_event_name: "PreCompact" }, directory);
-    },
-
-    event: async ({ event }: { event: { type: string; properties?: Record<string, unknown> } }) => {
-      if (event.type !== "session.idle") return;
-      const sessionID = (event.properties?.sessionID as string) ?? "";
-      // A workflow can be created during the first turn, after session-start saw
-      // no state. Let the core Stop hook's own state-file guard decide.
-      if (!sessionID || !sawHumanTurn.has(sessionID)) return;
-      if (!(await isMainSession(sessionID))) return;
-      if (idleInFlight.has(sessionID)) return;
-      idleInFlight.add(sessionID);
-      // opencode provides no stop_hook_active flag and no transcript, so the
-      // core hook's run-mode-aware no-progress ceiling is the loop guard here
-      // (same degradation profile as Kiro). The absent transcript no longer makes
-      // the conversational carve-out inert: the core hook falls back to the
-      // `.aidlc-engine/human-turn` / `.aidlc-engine/engine-touch` mtime comparison, and the
-      // chat.message arm's aidlc-record-human-turn.ts forward writes the former.
-      let nudgeReason: string | null = null;
-      try {
-        const res = await runCore(
-          "aidlc-continue-workflow.ts",
-          {
-            hook_event_name: "Stop",
-            stop_hook_active: false,
-            session_id: sessionID,
-          },
-          directory,
-        );
-        try {
-          const parsed = JSON.parse(res.stdout) as { decision?: string; reason?: string };
-          if (parsed.decision === "block" && parsed.reason) {
-            nudgeReason = parsed.reason;
-          }
-        } catch {
-          /* no/unparseable output → allow the continue-workflow (advisory) */
+            tool_response: output?.output ?? "",
+          };
+          await runCore("aidlc-rebuild-stage-graph.ts", payload, directory);
+          return;
         }
-      } finally {
-        idleInFlight.delete(sessionID);
-      }
-      // Release serialization before the prompt: OpenCode may synchronously
-      // deliver the continuation's next idle while this promise is pending.
-      if (nudgeReason) {
-        await client.session.prompt({
-          path: { id: sessionID },
-          body: { parts: [{ type: "text", text: `${NUDGE_SENTINEL} ${nudgeReason}` }] },
-        });
-      }
-    },
-  };
+        if (tool === "todowrite") {
+          // The core hook keys on Claude's TaskUpdate in_progress transition;
+          // map the first in-progress todo's content onto activeForm.
+          const todos = (args.todos as Array<{ content?: string; status?: string }>) ?? [];
+          const active = todos.find((t) => t.status === "in_progress");
+          if (!active?.content) return;
+          await runCore(
+            "aidlc-sync-workflow-state.ts",
+            {
+              hook_event_name: "PostToolUse",
+              tool_name: "TaskUpdate",
+              tool_input: { status: "in_progress", activeForm: active.content },
+            },
+            directory,
+          );
+          return;
+        }
+        if (tool === "task") {
+          await runCore(
+            "aidlc-log-subagent.ts",
+            {
+              hook_event_name: "SubagentStop",
+              session_id: input.sessionID,
+              agent_type:
+                (args.subagent_type as string) ?? (args.agent as string) ?? "unknown",
+              agent_id: input.callID,
+            },
+            directory,
+          );
+        }
+      },
+
+      "experimental.session.compacting": async (_input: { sessionID: string }) => {
+        await runCore("aidlc-validate-state.ts", { hook_event_name: "PreCompact" }, directory);
+      },
+
+      event: async ({ event }: { event: { type: string; properties?: Record<string, unknown> } }) => {
+        if (event.type !== "session.idle") return;
+        const sessionID = (event.properties?.sessionID as string) ?? "";
+        // A workflow can be created during the first turn, after session-start saw
+        // no state. Let the core Stop hook's own state-file guard decide.
+        if (!sessionID || !sawHumanTurn.has(sessionID)) return;
+        if (!(await isMainSession(sessionID))) return;
+        if (idleInFlight.has(sessionID)) return;
+        idleInFlight.add(sessionID);
+        // opencode provides no stop_hook_active flag and no transcript, so the
+        // core hook's run-mode-aware no-progress ceiling is the loop guard here
+        // (same degradation profile as Kiro). The absent transcript no longer makes
+        // the conversational carve-out inert: the core hook falls back to the
+        // `.aidlc-engine/human-turn` / `.aidlc-engine/engine-touch` mtime comparison, and the
+        // chat.message arm's aidlc-record-human-turn.ts forward writes the former.
+        let nudgeReason: string | null = null;
+        try {
+          const res = await runCore(
+            "aidlc-continue-workflow.ts",
+            {
+              hook_event_name: "Stop",
+              stop_hook_active: false,
+              session_id: sessionID,
+            },
+            directory,
+          );
+          try {
+            const parsed = JSON.parse(res.stdout) as { decision?: string; reason?: string };
+            if (parsed.decision === "block" && parsed.reason) {
+              nudgeReason = parsed.reason;
+            }
+          } catch {
+            /* no/unparseable output → allow the continue-workflow (advisory) */
+          }
+        } finally {
+          idleInFlight.delete(sessionID);
+        }
+        // Release serialization before the prompt: OpenCode may synchronously
+        // deliver the continuation's next idle while this promise is pending.
+        if (nudgeReason) {
+          await client.session.prompt({
+            path: { id: sessionID },
+            body: { parts: [{ type: "text", text: `${NUDGE_SENTINEL} ${nudgeReason}` }] },
+          });
+        }
+      },
+    };
+  },
 };

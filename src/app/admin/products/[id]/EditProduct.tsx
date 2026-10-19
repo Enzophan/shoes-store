@@ -1,4 +1,5 @@
 "use client"
+import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
 
 interface Variant {
@@ -18,7 +19,9 @@ interface ProductFormValues {
 }
 
 export default function EditProduct({ product }: { product: any }) {
-  const [variants, setVariants] = useState(product.variants || [])
+  const router = useRouter();
+
+  const [variants, setVariants] = useState<Variant[]>(product.variants || [])
   const [message, setMessage] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -28,20 +31,26 @@ export default function EditProduct({ product }: { product: any }) {
   const [category, setCategory] = useState(product.category || '')
   const [imageUrl, setImageUrl] = useState(product.image || '')
 
-  async function updateInventory(variantId: number, inventory: number) {
+  async function handleInventorySave(variantId: number, v: any) {
+
     try {
+      const inventory = v.inventory;
+      const price = v.price;
       const res = await fetch(`/api/admin/variants/${variantId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ inventory })
+        body: JSON.stringify({ inventory: inventory, price: price })
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Update failed')
-      setVariants((v:any[]) => v.map((x:any) => x.id === variantId ? { ...x, inventory: data.inventory } : x))
-      setMessage('Inventory updated')
-    } catch (err:any) {
+      setVariants((v: any[]) => v.map((x: any) => x.id === variantId ? { ...x, inventory: data.inventory, price: data.price } : x))
+      setMessage('Inventory/Price updated')
+    } catch (err: any) {
       setMessage(err.message || 'Error')
     }
+    // const inputVal = inputEl ? Number(inputEl.value) : v.inventory
+    // const price = v.price
+    // updateInventory(variantId, inputVal, price)
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -64,7 +73,8 @@ export default function EditProduct({ product }: { product: any }) {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to update product')
       setMessage('Product updated successfully')
-    } catch (err:any) {
+      router.push('/admin/products')
+    } catch (err: any) {
       setMessage(err.message || 'Error updating product')
     } finally {
       setIsSubmitting(false)
@@ -72,7 +82,7 @@ export default function EditProduct({ product }: { product: any }) {
   }
 
   return (
-    <div className="p-8">
+    <div>
       <h2 className="text-xl font-semibold mb-6">Edit Product</h2>
 
       {/* Product Details Form */}
@@ -155,7 +165,7 @@ export default function EditProduct({ product }: { product: any }) {
             </tr>
           </thead>
           <tbody>
-            {variants.map((v:any) => (
+            {variants.map((v: any) => (
               <tr key={v.id} className="border-t">
                 <td className="p-2">{v.sku}</td>
                 <td className="p-2">{v.color}</td>
@@ -166,7 +176,7 @@ export default function EditProduct({ product }: { product: any }) {
                     step="0.01"
                     min="0"
                     value={v.price}
-                    onChange={(e) => setVariants(variants.map((x:any) => x.id === v.id ? { ...x, price: Number(e.target.value) } : x))}
+                    onChange={(e) => setVariants(variants.map((x: any) => x.id === v.id ? { ...x, price: Number(e.target.value) } : x))}
                     className="w-24 p-1 border rounded"
                   />
                 </td>
@@ -174,17 +184,13 @@ export default function EditProduct({ product }: { product: any }) {
                   <input
                     type="number"
                     min={0}
-                    defaultValue={v.inventory}
-                    id={`inv-${v.id}`} 
+                    value={v.inventory}
+                    onChange={(e) => setVariants(variants.map((x: any) => x.id === v.id ? { ...x, inventory: Number(e.target.value) } : x))}
                     className="w-24 p-1 border rounded"
                   />
                 </td>
                 <td className="p-2">
-                  <button onClick={() => {
-                    const el = document.getElementById(`inv-${v.id}`) as HTMLInputElement | null
-                    const val = el ? Number(el.value) : v.inventory
-                    updateInventory(v.id, val)
-                  }} className="px-3 py-1 bg-blue-600 text-white rounded">Save Inventory</button>
+                  <button onClick={() => handleInventorySave(v.id, v)} className="px-3 py-1 bg-blue-600 text-white rounded">Save Inventory</button>
                 </td>
               </tr>
             ))}

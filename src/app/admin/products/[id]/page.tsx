@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import React from 'react'
 import { PrismaClient } from '@prisma/client'
 import EditProduct from './EditProduct'
@@ -11,7 +12,15 @@ export default async function AdminEditPage({ params }: { params: { id: string }
 
   return (
     <main className="p-8">
-      <h1 className="text-2xl font-bold">Edit Product</h1>
+      <nav className="mb-6">
+        <Link
+          href="/admin/products"
+          className="font-mono text-sm text-stone hover:text-ink transition-colors"
+        >
+          ← Back to Products List
+        </Link>
+      </nav>
+
       <div className="mt-4">
         <EditProduct product={product} />
       </div>
