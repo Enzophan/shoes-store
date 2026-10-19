@@ -32,7 +32,6 @@ export default function EditProduct({ product }: { product: any }) {
   const [imageUrl, setImageUrl] = useState(product.image || '')
 
   async function handleInventorySave(variantId: number, v: any) {
-
     try {
       const inventory = v.inventory;
       const price = v.price;
@@ -48,12 +47,9 @@ export default function EditProduct({ product }: { product: any }) {
     } catch (err: any) {
       setMessage(err.message || 'Error')
     }
-    // const inputVal = inputEl ? Number(inputEl.value) : v.inventory
-    // const price = v.price
-    // updateInventory(variantId, inputVal, price)
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleProducSave(e: React.FormEvent) {
     e.preventDefault()
     setIsSubmitting(true)
     setMessage(null)
@@ -86,7 +82,7 @@ export default function EditProduct({ product }: { product: any }) {
       <h2 className="text-xl font-semibold mb-6">Edit Product</h2>
 
       {/* Product Details Form */}
-      <form onSubmit={handleSubmit} className="space-y-6 mb-8">
+      <form onSubmit={handleProducSave} className="space-y-6 mb-8">
         <div>
           <label htmlFor="name" className="block font-medium text-sm text-ink mb-2">Name</label>
           <input
@@ -194,6 +190,7 @@ export default function EditProduct({ product }: { product: any }) {
                 </td>
               </tr>
             ))}
+
           </tbody>
         </table>
       </div>
