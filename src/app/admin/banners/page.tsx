@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link';
-import AddBanner from './add/page';
+import BannerForm from './BannerForm';
 
 interface Banner {
   id: string
@@ -25,12 +25,6 @@ export default function AdminBanners() {
   const [banners, setBanners] = useState<Banner[]>([])
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null)
   const [showForm, setShowForm] = useState(false)
-  const [formValues, setFormValues] = useState<BannerFormValues>({
-    imageUrl: '',
-    linkUrl: '',
-    displayOrder: 0,
-    isActive: true,
-  })
 
   // Fetch banners from API or use local state
   useEffect(() => {
@@ -120,12 +114,6 @@ export default function AdminBanners() {
   const startEdit = (banner: Banner) => {
     setEditingBanner(banner)
     setShowForm(true)
-    setFormValues({
-      imageUrl: banner.imageUrl,
-      linkUrl: banner.linkUrl,
-      displayOrder: banner.displayOrder,
-      isActive: banner.isActive,
-    })
   }
 
   return (
@@ -150,7 +138,8 @@ export default function AdminBanners() {
 
         {/* Add Banner Form */}
         {showForm &&
-          <AddBanner
+          <BannerForm
+            key={editingBanner?.id ?? 'new'}
             editingBanner={editingBanner}
             onSubmit={handleSubmit}
             onCancel={() => {
@@ -158,83 +147,6 @@ export default function AdminBanners() {
               setEditingBanner(null)
             }}
           />
-          // (
-          //   <div className="bg-chalk p-6 border border-pearl rounded mb-6">
-          //     <h2 className="font-display font-bold text-lg text-ink mb-4">
-          //       {editingBanner ? 'Edit Banner' : 'Add New Banner'}
-          //     </h2>
-          //     <form onSubmit={onSubmit} className="space-y-4">
-          //       <div>
-          //         <label className="block text-stone mb-2 displayOrder" />
-          //         <input
-          //           name="imageUrl"
-          //           type="text"
-          //           className="w-full p-3 border border-pearl rounded focus-outline"
-          //           placeholder="Image URL"
-          //           defaultValue={editingBanner?.imageUrl || ''}
-          //           required
-          //         />
-          //       </div>
-
-          //       <div>
-          //         <label className="block text-stone mb-2 linkUrl" />
-          //         <input
-          //           name="linkUrl"
-          //           type="text"
-          //           className="w-full p-3 border border-pearl rounded focus-outline"
-          //           placeholder="Link URL"
-          //           defaultValue={editingBanner?.linkUrl || ''}
-          //           required
-          //         />
-          //       </div>
-
-          //       <div>
-          //         <label className="block text-stone mb-2 displayOrder" />
-          //         <input
-          //           name="displayOrder"
-          //           type="number"
-          //           className="w-full p-3 border border-pearl rounded focus-outline"
-          //           placeholder="Display order (numeric)"
-          //           defaultValue={editingBanner?.displayOrder?.toString() || ''}
-          //           required
-          //         />
-          //       </div>
-
-          //       <div>
-          //         <label className="block text-stone mb-2 isActive" />
-          //         <div className="flex items-center gap-2">
-          //           <input
-          //             name="isActive"
-          //             type="checkbox"
-          //             defaultChecked={editingBanner?.isActive ?? true}
-          //             className="w-4 h-4 rounded border focus-outline"
-          //           />
-          //           <span className="text-stone">Active</span>
-          //         </div>
-          //       </div>
-
-          //       <div className="flex gap-3">
-          //         <button
-          //           type="submit"
-          //           className="bg-rose text-chalk px-4 py-2 rounded hover:bg-rose/90 transition-colors"
-          //         >
-          //           {editingBanner ? 'Update Banner' : 'Add Banner'}
-          //         </button>
-          //         <button
-          //           type="button"
-          //           onClick={() => {
-          //             setShowForm(false)
-          //             setEditingBanner(null)
-          //           }}
-          //           className="bg-pearl text-ink px-4 py-2 rounded hover:bg-pearl/90 transition-colors"
-          //         >
-          //           Cancel
-          //         </button>
-          //       </div>
-          //     </form>
-          //   </div>
-          // )
-
         }
 
         {/* Banner List Table */}

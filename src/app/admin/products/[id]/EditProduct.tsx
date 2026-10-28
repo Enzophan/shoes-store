@@ -3,26 +3,9 @@ import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
 import EditVariant from './EditVariant'
 
-interface Variant {
-  id: number
-  sku: string
-  color: string
-  size: string
-  price: number
-  inventory: number
-}
-
-interface ProductFormValues {
-  name: string
-  description: string
-  category: string
-  imageUrl: string
-}
-
 export default function EditProduct({ product }: { product: any }) {
   const router = useRouter();
 
-  const [variants, setVariants] = useState<Variant[]>(product.variants || [])
   const [message, setMessage] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -31,24 +14,6 @@ export default function EditProduct({ product }: { product: any }) {
   const [description, setDescription] = useState(product.description || '')
   const [category, setCategory] = useState(product.category || '')
   const [imageUrl, setImageUrl] = useState(product.image || '')
-
-  async function handleInventorySave(variantId: number, v: any) {
-    try {
-      const inventory = v.inventory;
-      const price = v.price;
-      const res = await fetch(`/api/admin/variants/${variantId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ inventory: inventory, price: price })
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Update failed')
-      setVariants((v: any[]) => v.map((x: any) => x.id === variantId ? { ...x, inventory: data.inventory, price: data.price } : x))
-      setMessage('Inventory/Price updated')
-    } catch (err: any) {
-      setMessage(err.message || 'Error')
-    }
-  }
 
   async function handleProducSave(e: React.FormEvent) {
     e.preventDefault()
@@ -148,54 +113,12 @@ export default function EditProduct({ product }: { product: any }) {
         </button>
       </form>
 
-      {/* Variants Table */}
-      <div className="overflow-x-auto">
-        <EditVariant variants={variants} />
-        {/* <table className="w-full table-auto border">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="p-2">SKU</th>
-              <th className="p-2">Color</th>
-              <th className="p-2">Size</th>
-              <th className="p-2">Price</th>
-              <th className="p-2">Inventory</th>
-              <th className="p-2">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {variants.map((v: any) => (
-              <tr key={v.id} className="border-t">
-                <td className="p-2">{v.sku}</td>
-                <td className="p-2">{v.color}</td>
-                <td className="p-2">{v.size}</td>
-                <td className="p-2">
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={v.price}
-                    onChange={(e) => setVariants(variants.map((x: any) => x.id === v.id ? { ...x, price: Number(e.target.value) } : x))}
-                    className="w-24 p-1 border rounded"
-                  />
-                </td>
-                <td className="p-2">
-                  <input
-                    type="number"
-                    min={0}
-                    value={v.inventory}
-                    onChange={(e) => setVariants(variants.map((x: any) => x.id === v.id ? { ...x, inventory: Number(e.target.value) } : x))}
-                    className="w-24 p-1 border rounded"
-                  />
-                </td>
-                <td className="p-2">
-                  <button onClick={() => handleInventorySave(v.id, v)} className="px-3 py-1 bg-blue-600 text-white rounded">Save Inventory</button>
-                </td>
-              </tr>
-            ))}
-
-          </tbody>
-        </table> */}
-      </div>
+      {/* Variants */}
+      <EditVariant
+        key={product.id}
+        productId={product.id}
+        initialVariants={product.variants || []}
+      />
     </div>
   )
 }

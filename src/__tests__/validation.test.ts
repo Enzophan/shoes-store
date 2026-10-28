@@ -1,4 +1,10 @@
-import { validateCartItems, validateEmail, validateShippingAddress } from '../lib/validation'
+import {
+  validateCartItems,
+  validateEmail,
+  validateShippingAddress,
+  validateVariantInput,
+  validateVariantPatch,
+} from '../lib/validation'
 
 describe('validateCartItems', () => {
   it('should return valid: true for valid cart items', () => {
@@ -124,5 +130,94 @@ describe('validateShippingAddress', () => {
   it('should return valid: false and error when address is null', () => {
     const result = validateShippingAddress(null as any)
     expect(result).toEqual({ valid: false, errors: ['address required'] })
+  })
+})
+
+describe('validateVariantInput', () => {
+  const validInput = {
+    productId: 1,
+    sku: 'AM90-BLK-10',
+    color: 'Black',
+    size: '10',
+    price: 120,
+    inventory: 50,
+  }
+
+  it('should return valid: true for a complete variant', () => {
+    expect(validateVariantInput(validInput)).toEqual({ valid: true, errors: [] })
+  })
+
+  it('should reject non-object input', () => {
+    expect(validateVariantInput(null)).toEqual({ valid: false, errors: ['variant must be an object'] })
+    expect(validateVariantInput([])).toEqual({ valid: false, errors: ['variant must be an object'] })
+  })
+
+  it('should require a positive integer productId', () => {
+    expect(validateVariantInput({ ...validInput, productId: 0 }).errors).toContain(
+      'productId must be a positive integer'
+    )
+    expect(validateVariantInput({ ...validInput, productId: 1.5 }).errors).toContain(
+      'productId must be a positive integer'
+    )
+  })
+
+  it('should require non-empty sku, color and size', () => {
+    expect(validateVariantInput({ ...validInput, sku: '   ' }).errors).toContain('sku is required')
+    expect(validateVariantInput({ ...validInput, color: '' }).errors).toContain('color is required')
+    expect(validateVariantInput({ ...validInput, size: '' }).errors).toContain('size is required')
+  })
+
+  it('should require a price greater than 0', () => {
+    expect(validateVariantInput({ ...validInput, price: 0 }).errors).toContain(
+      'price must be a number greater than 0'
+    )
+    expect(validateVariantInput({ ...validInput, price: -5 }).errors).toContain(
+      'price must be a number greater than 0'
+    )
+  })
+
+  it('should require a non-negative integer inventory', () => {
+    expect(validateVariantInput({ ...validInput, inventory: -1 }).errors).toContain(
+      'inventory must be a non-negative integer'
+    )
+    expect(validateVariantInput({ ...validInput, inventory: 1.5 }).errors).toContain(
+      'inventory must be a non-negative integer'
+    )
+  })
+})
+
+describe('validateVariantPatch', () => {
+  it('should accept a single valid field', () => {
+    expect(validateVariantPatch({ inventory: 5 })).toEqual({ valid: true, errors: [] })
+    expect(validateVariantPatch({ sku: 'NEW-SKU' })).toEqual({ valid: true, errors: [] })
+  })
+
+  it('should accept multiple valid fields', () => {
+    expect(validateVariantPatch({ sku: 'NEW-SKU', price: 99.5, inventory: 0 })).toEqual({
+      valid: true,
+      errors: [],
+    })
+  })
+
+  it('should reject an empty payload', () => {
+    expect(validateVariantPatch({})).toEqual({
+      valid: false,
+      errors: ['at least one field is required'],
+    })
+  })
+
+  it('should reject invalid field values', () => {
+    expect(validateVariantPatch({ sku: '  ' }).errors).toContain('sku must be a non-empty string')
+    expect(validateVariantPatch({ price: 0 }).errors).toContain('price must be a number greater than 0')
+    expect(validateVariantPatch({ inventory: -1 }).errors).toContain(
+      'inventory must be a non-negative integer'
+    )
+  })
+
+  it('should reject non-object input', () => {
+    expect(validateVariantPatch(undefined)).toEqual({
+      valid: false,
+      errors: ['variant must be an object'],
+    })
   })
 })
